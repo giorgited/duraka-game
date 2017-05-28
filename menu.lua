@@ -42,8 +42,11 @@ function scene:create( event )
 	local centerX = display.contentCenterX
 	local centerY = display.contentCenterY
 	-- create/position logo/title image on upper-half of the screen
-	local titleLogo = display.newText( "Joker Game", centerX, 50, native.systemFont, 50)
-  local subtitleLogo = display.newText( "Main Menu", centerX, 100, native.systemFont, 30)
+	local titleLogo = display.newText( "Joker Game", centerX, 0, native.systemFont, 55)
+	titleLogo:setFillColor( 0, 0, 0 )
+
+  local subtitleLogo = display.newText( "Main Menu", centerX, 50, native.systemFont, 25)
+	subtitleLogo:setFillColor( 1, 0, 0 )
 
 	local cardsImg = display.newImage("cards.png", centerX, 200)
 				cardsImg.width = 150
@@ -51,10 +54,10 @@ function scene:create( event )
 	--how to play rectangle
 	local playBtn = display.newRoundedRect( 0, 0, 150,  50, 12 )
 				playBtn.strokeWidth = 3
-				playBtn:setFillColor( 0.5 )
+				playBtn:setFillColor( 0 )
 				playBtn:setStrokeColor( 1, 0, 0 )
 				playBtn.x = centerX
-				playBtn.y = cardsImg.y + 100
+				playBtn.y = cardsImg.y + 150
 	--how to play text
 	playTxt = widget.newButton{
 					label="Play Now",
@@ -63,12 +66,12 @@ function scene:create( event )
 					onRelease = onPlayBtnRelease	-- event listener function
 	}
 	playTxt.x = display.contentCenterX
-	playTxt.y = cardsImg.y + 100
+	playTxt.y = cardsImg.y + 150
 
 	--how to play rectangle
 	local howToBtn = display.newRoundedRect( 0, 0, 150,  50, 12 )
 				howToBtn.strokeWidth = 3
-				howToBtn:setFillColor( 0.5 )
+				howToBtn:setFillColor( 0 )
 				howToBtn:setStrokeColor( 1, 0, 0 )
 				howToBtn.x = centerX
 				howToBtn.y = playBtn.y + 60
@@ -85,7 +88,7 @@ function scene:create( event )
 	--about rectangle
 	local aboutBtn = display.newRoundedRect( 0, 0, 150,  50, 12 )
 				aboutBtn.strokeWidth = 3
-				aboutBtn:setFillColor( 0.5 )
+				aboutBtn:setFillColor( 0 )
 				aboutBtn:setStrokeColor( 1, 0, 0 )
 				aboutBtn.x = centerX
 				aboutBtn.y = howToBtn.y + 60
@@ -135,7 +138,6 @@ function scene:destroy( event )
 end
 
 ---------------------------------------------------------------------------------
-
 -- Listener setup
 scene:addEventListener( "create", scene )
 scene:addEventListener( "destroy", scene )
