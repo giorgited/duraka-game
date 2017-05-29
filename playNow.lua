@@ -40,7 +40,7 @@ function cardTapped(event)
     end
 end
 
-local del = 200;
+local del = 100;
 local myCardX = zeroX + 39
 
 function dealMe(numberOfCards)
@@ -55,7 +55,7 @@ function dealMe(numberOfCards)
                                                             myCardObj.y = obj.y
                                                             transition.dissolve( obj, myCardObj, 500 )
                                                         end})
-              del = del + 200
+              del = del + 100
               myCardX = myCardX + cardWidth
               handCardIndex = handCardIndex + 1
     end   
@@ -69,7 +69,7 @@ function dealUser2(numberOfCards)
           cards[handCardIndex].isVisible = false
           table.insert(user2Cards, cards[handCardIndex])
           transition.moveTo(backCards[handCardIndex], {delay = del, x=zeroX + 30, y=centerY, time=100})
-          del = del + 200
+          del = del + 100
           handCardIndex = handCardIndex + 1 
     end
 end
@@ -77,7 +77,7 @@ function dealUser3(numberOfCards)
     for i=1, numberOfCards do
           table.insert(user3Cards, cards[handCardIndex])
           transition.moveTo(backCards[handCardIndex], {delay= del,x=centerX, y=zeroY + 30, time=100})
-          del = del + 200
+          del = del + 100
           handCardIndex = handCardIndex + 1
     end
 end
@@ -85,7 +85,7 @@ function dealuser4(numberOfCards)
     for i=1, numberOfCards do
           table.insert(user4Cards, cards[handCardIndex])
           transition.moveTo(backCards[handCardIndex], {delay= del,x=maxX - 30, y=centerY, time=100})
-          del = del + 200
+          del = del + 100
           handCardIndex = handCardIndex + 1
      end
 end
