@@ -28,6 +28,7 @@ local counter = 1
 local moveToX = 0
 local moveToY = 0
 local turn = 1
+local numOfCardsUser2, numOfCardsUser3, numOfCardsUser4 = {}, {}, {}
 local handCardIndex = 1
 local centerX, centerY, zeroX, zeroY, maxX, maxY =
       display.contentCenterX, display.contentCenterY, display.screenOriginX, display.screenOriginY, display.actualContentWidth, display.actualContentHeight
@@ -92,12 +93,14 @@ end
 
 function dealCards(numberPerPerson)
     local x = 1;
-    
+     
     for i=1, numberPerPerson * 4 do
         if (x == 1) then
           dealMe(1)
         elseif (x==2) then
           dealUser2(1)
+
+          
         elseif (x==3) then
           dealUser3(1)
         elseif (x==4) then
@@ -279,7 +282,7 @@ function scene:create( event )
         user2.x = zeroX + 30
         user2.y = centerY
         user2.alpha = .2
-    local user3 = display.newRect( 0, 0, cardWidth,  cardHeight)
+  local user3 = display.newRect( 0, 0, cardWidth,  cardHeight)
         user3.strokeWidth = 3
         user3:setFillColor( .7, .4)
         user3:setStrokeColor( 1, 0, 0, .2 )
@@ -319,6 +322,19 @@ function scene:create( event )
         backCards[i] = cardBack
         sceneGroup:insert(cardBack)
   end
+
+  ----sugar bear 5,000 <3 love youuu----
+  ----this is what youll need to create text, you can modify them and use this as template
+  ---- to create other 2 ------
+  local textX = user2.x + 10
+  local textY = user2.y + 40
+  local text = display.newText( "Remaining Cards: ", textX, textY, native.systemFont, 10)
+  local numOfCardsUser2 = display.newText( "6", text.x, text.y+15, native.systemFont, 10)
+  
+  sceneGroup:insert(numOfCardsUser2)
+
+
+  ---------------------------------------
   sceneGroup:insert(myUserCards)
   sceneGroup:insert(user2)
   sceneGroup:insert(user3)
