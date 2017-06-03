@@ -3,187 +3,202 @@
 -- menu.lua
 --
 -----------------------------------------------------------------------------------------
-
--- on button press somewhered
-local json = require( "json" )
-local composer = require( "composer" )
+local playNowCreateObjects = require("playNowCreateObjects")
 local scene = composer.newScene()
-local physics = require "physics"
-local widget = require "widget"
-local deckOfCards = {
-  "14S", "2S", "3S", "4S", "5S", "6S", "7S", "8S",  "9S", "10S", "11S", "12S", "13S",
-  "14D", "2D", "3D", "4D", "5D", "6D", "7D", "8D",  "9D", "10D", "11D", "12D", "13D",
-  "14H", "2H", "3H", "4H", "5H", "6H", "7H", "8H",  "9H", "10H", "11H", "12H", "13H",
-  "14C", "2C", "3C", "4C", "5C", "6C", "7C", "8C",  "9C", "10C", "11C", "12C", "13C"
-}
-local myCards, user2Cards, user3Cards, user4Cards = {}, {}, {}, {}
-local cards = {}
-local backCards = {}
-local cardWidth = (display.actualContentWidth - 30)/6
-local cardHeight =  cardWidth * 1.3
-local sceneGroup
-local yourTurn = false
-local playAreaGroup = {}
-local playAreaGroupCards = {}
-local timerDelay = 0
-local counter = 1
-local moveToX = 0
-local moveToY = 0
-local turn = 1
-local numOfCardsUser2, numOfCardsUser3, numOfCardsUser4 = {}, {}, {}
+
+
+
+
+local myUserArea, user2Area, user3Area, user4Area
+local cards, backCards, playAreaGroup, cardWidth, cardHeight
+local myCards, user2Cards, user3Cards, user4Cards, playAreaGroupCards = {}, {}, {}, {}, {}
+local user2backCards,user3backCards, user4backCards = {}, {}, {}
 local handCardIndex = 1
-local centerX, centerY, zeroX, zeroY, maxX, maxY =
-      display.contentCenterX, display.contentCenterY, display.screenOriginX, display.screenOriginY, display.actualContentWidth, display.actualContentHeight
+local yourTurn = false
+local turn = 1
+local counter = 1
 math.randomseed(os.time())
 --------------------------------------------------------------------------------------------------
 function cardTapped(event)
-    sceneGroup.doneButton:setFillColor( 1 )
+    myUserArea.doneButton:setFillColor( 1 )
+
+    local cardValue = getCardValue(event.target)
+    local cardAdded = false
     if(yourTurn) then
-        addNewCardToPlayArea(event.target)
+        if (table.maxn(playAreaGroupCards) == 0) then
+            local nextSpot = findNextPlayAreaSpot()
+            nextSpot.x = nextSpot.moveToX
+            nextSpot.y = nextSpot.moveToY
+            addNewCardToPlayArea(event.target, myCards,nextSpot)
+            --cardAdded = true
+        else
+            local canAdd = false
+            for i=1, table.maxn(playAreaGroupCards) do
+                local length = string.len(playAreaGroupCards[i].value)
+                local value = getCardValue(playAreaGroupCards[i])
+                if (value == cardValue) then
+                    canAdd = true
+                end  
+            end
+            if (canAdd) then
+                local nextSpot = findNextPlayAreaSpot()
+                nextSpot.x = nextSpot.moveToX
+                nextSpot.y = nextSpot.moveToY
+                addNewCardToPlayArea(event.target, myCards,nextSpot) 
+                cardAdded = true       
+            end
+        end
+        if (cardAdded == true) then
+            cardIndex = table.indexOf(myCards, event.target)
+            for i= cardIndex, table.maxn( myCards ) do 
+                transition.moveTo(myCards[i], {x=myCards[i].x - cardWidth, y=myCards[i].y, time=300})
+            end
+        end
     end
 end
 
 function doneButtonPressed (event)
-    local phase = event.phase 
-    local target = event.target._view._label
-
-    local userDidCut = usersTurn()
-
-    if (userDidCut ~= true) then
-        clearPlayArea(userDidCut, user2Cards)
+    myUserArea.doneButton:setFillColor( 0 )
+    local isFinal = true
+    for i=1, table.maxn( playAreaGroupCards ) do
+        if (playAreaGroupCards[i].hasBeenCut ~= true) then
+            isFinal = false
+        end
     end
 
+    if (isFinal ~= true) then
+        local phase = event.phase 
+        local target = event.target._view._label
+
+        local userDidCut = usersTurn()
+
+        if (userDidCut ~= true) then
+            clearPlayArea(userDidCut, user2Cards)
+            --rotate the game
+        else 
+            myUserArea.doneButton:setFillColor( 1 )
+        end
+    else
+        --user is done
+        --user3s turn if 6 cards hasnt gone down
+        turn = turn + 2
+        if (table.maxn(playAreaGroupCards) <= 12) then
+            local result = otherUsersAdditionTurn()
+        end
+        --clearPlayArea(false, user2Cards)
+        --handDone(false)
+    end
 end
+
 local del = 900;
-local tot = 0
 function dealMe(numberOfCards)
+      if (handCardIndex == 52) then return end
+      local contentX,contentY = sceneGroup.myUserArea.myUserCards:localToContent( 0, 0 )
       table.insert(myCards, cards[handCardIndex])
-      cards[handCardIndex]:addEventListener( "tap", cardTapped )
-      local obj = backCards[handCardIndex]
-      local myCardObj = cards[handCardIndex]
-      cards[handCardIndex].x = obj.x
-      cards[handCardIndex].y = obj.y
-      local x = transition.moveTo(obj, {x=findEmptySpotInHolder(), y=maxY - 120, time=100, 
+      sceneGroup.cards[handCardIndex]:addEventListener( "tap", cardTapped )
+      local obj = sceneGroup.backCards[handCardIndex]
+      local myCardObj = sceneGroup.cards[handCardIndex]
+      sceneGroup.cards[handCardIndex].x = obj.x
+      sceneGroup.cards[handCardIndex].y = obj.y
+      
+      local x = transition.moveTo(obj, {x=findEmptySpotInHolder(), y=contentY, time=100, 
                                     onComplete = function ( obj )
                                                     myCardObj.x = obj.x
                                                     myCardObj.y = obj.y
                                                     transition.dissolve( obj, myCardObj, 500 )
                                                     dealMeHelper(numberOfCards)
-
                                                 end}) 
       handCardIndex = handCardIndex + 1       
 end
 function dealMeHelper(numberOfCards)
     if (numberOfCards <= 1 ) then
-        for i=1, table.maxn(myCards) do
-            print (myCards[i].value)
-        end
         return
     end
     numberOfCards  = numberOfCards - 1
     dealMe(numberOfCards)
 end
 function dealUser2(numberOfCards)
+    if (handCardIndex == 52) then return end
     for i=1, numberOfCards do
-          user2Cards.x = zeroX + 30
-          user2Cards.y = centerY
-          cards[handCardIndex].x = zeroX + 30
-          cards[handCardIndex].y = centerY
+          local contentX,contentY = user2Area.user2CardContainer:localToContent( 0, 0 )
+          user2Cards.x = contentX
+          user2Cards.y = contentY
+          cards[handCardIndex].x = contentX
+          cards[handCardIndex].y = contentY
           cards[handCardIndex].isVisible = false
           table.insert(user2Cards, cards[handCardIndex])
-          transition.moveTo(backCards[handCardIndex], {delay = del, x=zeroX + 30, y=centerY, time=100,
-                        onComplete = function () updateCardCounter("user2",i) end})
+
+          transition.moveTo(backCards[handCardIndex], {delay = del, x = contentX, y = contentY, time=100})
+          table.insert( user2backCards, backCards[handCardIndex] )
           del = del + 100
           handCardIndex = handCardIndex + 1 
     end
 end
 function dealUser3(numberOfCards)
+    if (handCardIndex == 52) then return end
     for i=1, numberOfCards do
+          local contentX,contentY = user3Area.user3CardContainer:localToContent( 0, 0 )
+          cards[handCardIndex].x = contentX
+          cards[handCardIndex].y = contentY
+          cards[handCardIndex].isVisible = false
           table.insert(user3Cards, cards[handCardIndex])
-          transition.moveTo(backCards[handCardIndex], {delay= del,x=centerX, y=zeroY + 30, time=100,
-            onComplete = function () updateCardCounter("user3",i) end})
+          transition.moveTo(backCards[handCardIndex], {delay= del,x=contentX, y=contentY, time=100})
+          table.insert( user3backCards, backCards[handCardIndex] )
           del = del + 100
           handCardIndex = handCardIndex + 1
     end
 end
 function dealuser4(numberOfCards)
+    if (handCardIndex == 52) then return end
     for i=1, numberOfCards do
+          local contentX,contentY = user4Area.user4CardContainer:localToContent( 0, 0 )
+          cards[handCardIndex].x = contentX
+          cards[handCardIndex].y = contentY
+          cards[handCardIndex].isVisible = false
           table.insert(user4Cards, cards[handCardIndex])
-          transition.moveTo(backCards[handCardIndex], {delay= del,x=maxX - 30, y=centerY, time=100,
-            onComplete = function() updateCardCounter("user4" ,i) end })
+          transition.moveTo(backCards[handCardIndex], {delay= del,x=contentX, y=contentY, time=100})
+          table.insert( user4backCards, backCards[handCardIndex] )
           del = del + 100
           handCardIndex = handCardIndex + 1
      end
 end
-
 function dealCards(numberPerPerson)
 
     dealMe(6)
     dealUser2(6)
     dealUser3(6)
     dealuser4(6)
-
+    timer.performWithDelay( 3000, reScaleCards , 1 )
 
     yourTurn = true
 end
-function addNewCardToPlayArea (card)
-    local playAreaWidth = playAreaGroup.playArea.width
-    local playAreaHeight = playAreaGroup.playArea.height
-    local playAreaX = playAreaGroup.playArea.x
-    local playAreaY = playAreaGroup.playArea.y
-    local xMin  = playAreaGroup.playArea.contentBounds.xMin
-    local xMax  = playAreaGroup.playArea.contentBounds.xMax
-    local yMin  = playAreaGroup.playArea.contentBounds.yMin
-    local yMax = playAreaGroup.playArea.contentBounds.yMax
+function addNewCardToPlayArea (card, usersCards, spot)
+    print ("adding: " .. card.value)
+        local moveToX  = spot.x
+        local movetoY  = spot.y
 
-    if (table.maxn(playAreaGroupCards) == 0) then
-        moveToX = playAreaX - 50
-        moveToY = playAreaY - 100
-    else
-        for i=1, table.maxn(playAreaGroupCards) do
-            if ((playAreaGroupCards[i].x + playAreaGroupCards[i].y) ~= (playAreaX + 50 + playAreaY - 100)) then
-                moveToX = playAreaX + 50
-                moveToY = playAreaY - 100
-            elseif ((playAreaGroupCards[i].x + playAreaGroupCards[i].y) ~= (playAreaX - 50 + playAreaY)) then
-                moveToX = playAreaX - 50 
-                moveToY = playAreaY 
-            elseif ((playAreaGroupCards[i].x + playAreaGroupCards[i].y) ~= (playAreaX + 50 + playAreaY)) then
-                moveToX = playAreaX + 50 
-                moveToY = playAreaY
-            elseif ((playAreaGroupCards[i].x + playAreaGroupCards[i].y) ~= (playAreaX - 50 + playAreaY + 100)) then
-                moveToX = playAreaX - 50
-                moveToY = playAreaY + 100
-            elseif ((playAreaGroupCards[i].x + playAreaGroupCards[i].y) ~= (playAreaX + 50 + playAreaY + 100)) then
-                moveToX = playAreaX + 50
-                moveToY = playAreaY + 100
-            end
-        end
-    end
-    
+        local removedCardIndex
 
-    local cardValue = getCardValue(card)
-    if (table.maxn(playAreaGroupCards) == 0) then
-        transition.moveTo(card, {x=moveToX, y=moveToY, time=300})
-        card.hasBeenCut = false
-        table.insert(playAreaGroupCards, card)
-        table.remove(myCards, table.indexOf(myCards, card))
+        card.isVisible = true
+        transition.moveTo(card, {x=moveToX, y=moveToY, time=300,
+                 onComplete = function ()
+                    print ("removing frmo: " .. table.indexOf(usersCards, card))
+                        card.hasBeenCut = false
+                        removedCardIndex = table.indexOf(usersCards, card)
+                        table.insert(playAreaGroupCards, card)
+                        table.remove(usersCards, removedCardIndex)
+                    end
+                    })
         
-    else
-        for i=1, table.maxn(playAreaGroupCards) do
-            local length = string.len(playAreaGroupCards[i].value)
-            local value = getCardValue(playAreaGroupCards[i])
-            if (value == cardValue) then
-                transition.moveTo(card, {x=moveToX, y=moveToY, time=300})
-                table.insert(playAreaGroupCards, card)
-                table.remove(myCards, table.indexOf(myCards, card))
-                card.hasBeenCut = false
-            end  
-        end
-    end
 end
 
 function usersTurn()
     local numberOfCuts = 0;
+    for i=1, table.maxn(playAreaGroupCards) do
+        if (playAreaGroupCards[i].hasBeenCut) then
+            numberOfCuts = numberOfCuts + 1
+        end
+    end
     for i=1, table.maxn( playAreaGroupCards ) do
         if (playAreaGroupCards[i].hasBeenCut ~= true) then
             local cutCardVal  = getCardValue(playAreaGroupCards[i])
@@ -197,11 +212,14 @@ function usersTurn()
                     if (cardVal > cutCardVal) then
                         playAreaGroupCards[i].hasBeenCut = true
                         local obj = user2Cards[x]
-                        transition.moveTo(obj, {x=playAreaGroupCards[i].x+20, y=playAreaGroupCards[i].y, time=200, onStart = function (obj) obj.isVisible=true end} )
+                        transition.moveTo(obj, {x=playAreaGroupCards[i].x+20, y=playAreaGroupCards[i].y, time=200, onStart = function (obj) 
+                                                    obj.isVisible=true 
+                                                end})
+                        obj.hasBeenCut = true
                         table.insert(playAreaGroupCards, obj)
+                        table.remove(user2Cards, x)
                         numberOfCuts = numberOfCuts + 2
                         counter = counter + 1;
-                        table.remove(user2Cards, x)
                         break;
                     else
                     end
@@ -215,21 +233,78 @@ function usersTurn()
         return false
     end
 end
+function otherUsersAdditionTurn()
 
-function handDone()
-    
+    if (table.maxn(playAreaGroupCards) <= 12) then     --user 2 turn
+        local userCards
+
+        if (turn == 2) then         userCards = user2Cards
+        elseif (turn ==3 ) then     userCards = user3Cards
+        elseif (turn ==4 ) then     userCards = user4Cards
+        else           
+                timer.performWithDelay( 1100, function()  
+                turn = 1 
+                yourTurn = true
+                reScaleCards()
+                timer.performWithDelay(1000, usersTurn, 1)
+                myUserArea.doneButton:setFillColor( 1 )
+            end, 1)  
+                   return
+        end
+
+        local nextSpot = findNextPlayAreaSpot()
+        local allSpots = findSpots()
+        local spot 
+        for i=1, table.maxn(allSpots) do
+            if allSpots[i].x == nextSpot.moveToX and allSpots[i].y == nextSpot.moveToY then
+                spot = i
+            end
+        end
+
+        local canAdd = false
+        for i=1, table.maxn(userCards) do
+            local cardValue = getCardValue(userCards[i])
+            for x=1, table.maxn(playAreaGroupCards) do
+                local value = getCardValue(playAreaGroupCards[x])
+                if (value == cardValue) then
+                    timer.performWithDelay(1000, function ()
+                    print ("value: " .. value .. " AND " .. cardValue .. " and " .. userCards[i].value)
+                    print("spot: " .. spot)
+                        addNewCardToPlayArea(userCards[i], userCards, allSpots[spot])
+                        end)
+                end  
+            end
+        end
+        if (turn < 4) then
+            timer.performWithDelay(1000, function ()
+                    turn = turn + 1
+                    otherUsersAdditionTurn()
+                    reScaleCards()
+            end, 1)
+        else 
+            turn=turn+1 
+            otherUsersAdditionTurn()
+        end
+    end
+end
+function handDone(userDidCut)
     fillUpUsers()
-    if (turn == 2) then         --user 2 turn
+    if (userDidCut) then 
+        --turn = turn + 2
+    else
+        --turn = turn + 1
+    end
+
+    if (turn == 1) then         --our turn
+
+    elseif (turn == 2) then     --user 2 turn
 
     elseif (turn == 3) then     --user 3 turn
 
     elseif (turn == 4) then     --user 4 turn
 
-    elseif (turn == 1) then     --your turn
-
     end
 end
-
 
 
 ---------------------------------------HELPERS--------------------------------------------------
@@ -245,7 +320,7 @@ function shuffleCards (t)
       assert( t, "shuffleTable() expected a table, got nil" )
       local iterations = #t
       local j
-
+      print ("iterrr" .. iterations)
       for i = iterations, 2, -1 do
           j = rand(i)
           t[i], t[j] = t[j], t[i]
@@ -260,8 +335,7 @@ function clearPlayArea(cut, user)
             transition.moveTo(playAreaGroupCards[i], {delay = delay, x = 500, y = -100, time = 300, 
                 onComplete = function(obj) 
                             table.remove(playAreaGroupCards, table.indexOf(obj)) 
-                            turn = turn + 1
-                            handDone()
+                            --turn = turn + 1
                             end})
 
             delay = delay  + 100
@@ -271,15 +345,15 @@ function clearPlayArea(cut, user)
             transition.moveTo(playAreaGroupCards[i], {delay = delay, x = user.x, y = user.y, time = 300, 
                 onComplete = function(obj) 
                             obj.isVisible = false
-                            table.insert(user, playAreaGroupCards[i]) 
-                            table.remove(playAreaGroupCards, i)
-                            turn = turn + 2
-                            handDone()
+                            table.insert(user, playAreaGroupCards[table.indexOf(playAreaGroupCards,obj)]) 
+                            table.remove(playAreaGroupCards, table.indexOf(playAreaGroupCards, obj))
 
+                            --turn = turn + 2
                  end})
             delay = delay  + 100
         end
     end
+    timer.performWithDelay(1000, handDone)
 end
 function fillUpUsers()
     if (table.maxn(myCards) < 6 ) then
@@ -306,56 +380,273 @@ function isMyCardHolderFull()
     end
 end
 function findEmptySpotInHolder()
-    local start = zeroX + 39
-
-    if(table.maxn(myCards) == 1 ) then
-        return start
+    local nums = {}
+    for i = 1, table.maxn( myCards ) do
+        table.insert(nums, myCards[i].x)
+    end
+    table.sort(nums)
+    if (table.maxn( myCards ) == 1) then
+        local contentX,contentY = myUserArea.myUserCards:localToContent( - myUserArea.myUserCards.width * 1/2 + 1/2*cardWidth + 2, 0 )
+        return contentX
     else
-        local startok = true;
-        for val = zeroX + 39, zeroX + 39 + cardWidth * 5, cardWidth do 
-            for i = 1, table.maxn( myCards ) do
-                local val1 = math.floor(tonumber(myCards[i].x)*100)/100
-                local val2 = math.floor(tonumber(val)*100)/100
-                if (val1 == val2) then 
-                    startok = false
+        return nums[table.maxn(nums)] + cardWidth
+    end
+end
+function findSpots()
+    local result = {}
+    local playAreaX = playAreaGroup.playArea.x
+    local playAreaY = playAreaGroup.playArea.y
+    local spot={}
+    spot.x = playAreaX + 50
+    spot.y = playAreaY - 100
+    table.insert(result,spot)
+    spot.x = playAreaX - 50 
+    spot.y = playAreaY 
+    table.insert(result,spot)
+    spot.x = playAreaX + 50 
+    spot.y = playAreaY
+    table.insert(result,spot)
+    spot.x = playAreaX - 50
+    spot.y = playAreaY + 100
+    table.insert(result,spot)
+    spot.x = playAreaX + 50
+    spot.y = playAreaY + 100
+    table.insert(result,spot)
+
+    return result
+end
+function findNextPlayAreaSpot()
+    local playAreaWidth = playAreaGroup.playArea.width
+        local playAreaHeight = playAreaGroup.playArea.height
+        local playAreaX = playAreaGroup.playArea.x
+        local playAreaY = playAreaGroup.playArea.y
+        local xMin  = playAreaGroup.playArea.contentBounds.xMin
+        local xMax  = playAreaGroup.playArea.contentBounds.xMax
+        local yMin  = playAreaGroup.playArea.contentBounds.yMin
+        local yMax = playAreaGroup.playArea.contentBounds.yMax
+        local openSpots = {}
+        openSpots.one = true
+        openSpots.two = true
+        openSpots.three = true 
+        openSpots.four = true
+        openSpots.five = true
+        openSpots.six = true
+
+        if (table.maxn(playAreaGroupCards) == 0) then
+            moveToX = playAreaX - 50
+            moveToY = playAreaY - 100
+        else
+            for i=1, table.maxn(playAreaGroupCards) do
+                
+                if (playAreaGroupCards[i].x  == (playAreaX + 50) and playAreaGroupCards[i].y == (playAreaY - 100)) then
+                    openSpots.two = false
+                end
+                if (playAreaGroupCards[i].x == (playAreaX - 50) and playAreaGroupCards[i].y ==  playAreaY) then
+                    openSpots.three = false
+                end
+                if (playAreaGroupCards[i].x == (playAreaX + 50) and  playAreaGroupCards[i].y ==  playAreaY) then
+                    openSpots.four = false
+                end
+                if (playAreaGroupCards[i].x == (playAreaX - 50) and  playAreaGroupCards[i].y ==  (playAreaY + 100)) then
+                    openSpots.five = false
+                end
+                if (playAreaGroupCards[i].x == (playAreaX + 50) and playAreaGroupCards[i].y ==   (playAreaY + 100)) then
+                    openSpots.six = false
                 end
             end
-            if (startok == true) then
-                return val
+            
+
+                if (openSpots.two) then
+                    moveToX = playAreaX + 50
+                    moveToY = playAreaY - 100
+                elseif (openSpots.three) then
+                    moveToX = playAreaX - 50 
+                    moveToY = playAreaY 
+                elseif (openSpots.four) then
+                    moveToX = playAreaX + 50 
+                    moveToY = playAreaY
+                elseif (openSpots.five) then
+                    moveToX = playAreaX - 50
+                    moveToY = playAreaY + 100
+                elseif (openSpots.six) then
+                    moveToX = playAreaX + 50
+                    moveToY = playAreaY + 100
+                end
+
+        end
+        local result = {}
+        result.moveToX = moveToX
+        result.moveToY = moveToY
+        return result
+end
+function reScaleCards ()
+    print("whos turn: " .. turn)
+    if (turn == 1) then         --our turn
+        myUserArea:localToContent( 0, 0 )
+        myUserArea.yourTurnText.isVisible = true
+        transition.moveBy(myUserArea.yourTurnText, {x=0, y=-50, 
+                            onComplete = function()
+                                 timer.performWithDelay( 1500, function ()
+                                        transition.moveBy(myUserArea.yourTurnText, {x=0, y=50,
+                                            onComplete = function () 
+                                                myUserArea.yourTurnText.isVisible = false
+                                            end})
+                                    end, 1)
+                             end
+                                })
+       
+                                   
+    
+        for i=1, table.maxn(user2backCards) do
+            user2backCards[i].fill.effect = ""
+            user2backCards[i].width = cardWidth
+            user2backCards[i].height = cardHeight
+        end
+        for i=1, table.maxn(user3backCards) do
+            user3backCards[i].fill.effect = "filter.blurGaussian"
+            if (user3backCards[i].width ~= cardWidth * .8) then
+                user3backCards[i].width = cardWidth * .8
+                user3backCards[i].height = cardHeight * .8
             end
-            startok = true
+        end
+        for i=1, table.maxn(user4backCards) do
+            user4backCards[i].fill.effect = "filter.blurGaussian"
+            if (user4backCards[i].width ~= cardWidth * .8) then
+                user4backCards[i].width = cardWidth * .8
+                user4backCards[i].height = cardHeight * .8
+            end
+        end
+        yourTurn = true
+    elseif (turn == 2) then     --user 2 turn
+        for i=1, table.maxn(user3backCards) do
+            user2backCards[i].fill.effect = ""
+            user3backCards[i].width = cardWidth
+            user3backCards[i].height = cardHeight
+        end
+        for i=1, table.maxn(user2backCards) do
+            user2backCards[i].fill.effect = ""
+            if (user2backCards[i].width ~= cardWidth * .8) then
+                user2backCards[i].width = cardWidth * .8
+                user2backCards[i].height = cardHeight * .8
+            end
+        end
+        for i=1, table.maxn(user4backCards) do
+            user4backCards[i].fill.effect = "filter.blurGaussian"
+            if (user4backCards[i].width ~= cardWidth * .8) then
+                user4backCards[i].width = cardWidth * .8
+                user4backCards[i].height = cardHeight * .8
+            end
+        end
+        yourTurn = false
+    elseif (turn == 3) then     --user 3 turn
+        for i=1, table.maxn(user4backCards) do
+            user2backCards[i].fill.effect = ""
+            user4backCards[i].width = cardWidth
+            user4backCards[i].height = cardHeight
+        end
+        for i=1, table.maxn(user2backCards) do
+            user2backCards[i].fill.effect = "filter.blurGaussian"
+            if (user2backCards[i].width ~= cardWidth * .8) then
+                user2backCards[i].width = cardWidth * .8
+                user2backCards[i].height = cardHeight * .8
+            end
+        end
+        for i=1, table.maxn(user3backCards) do
+            user2backCards[i].fill.effect = ""
+            if (user3backCards[i].width ~= cardWidth * .8) then
+                user3backCards[i].width = cardWidth * .8
+                user3backCards[i].height = cardHeight * .8
+            end
+        end
+        yourTurn = false
+    elseif (turn == 4) then     --user 4 turn
+        for i=1, table.maxn(user4backCards) do
+            user2backCards[i].fill.effect = ""
+            if (user4backCards[i].width ~= cardWidth * .8) then
+                user4backCards[i].width = cardWidth * .8
+                user4backCards[i].height = cardHeight * .8
+            end
+        end
+        yourTurn = true
+    end
+
+    if (yourTurn ~= true)  then
+        for i=1, table.maxn(myCards) do
+            myCards[i].fill.effect = "filter.blurGaussian"
         end
     end
 end
-function updateCardCounter(userNum, updateToText)
-    if (userNum == "user2") then
-        sceneGroup.numOfCardsUser2.text = updateToText
-    elseif (userNum == "user3" ) then
-        sceneGroup.numOfCardsUser3.text = updateToText
-    elseif (userNum == "user4" ) then
-        sceneGroup.numOfCardsUser4.text = updateToText
+
+function reArrangeMyCards()
+    --if (table.maxn(myCards) <= 6) then
+    --    return 
+    --end 
+    local contentX,contentY = myUserArea.myUserCards:localToContent( - myUserArea.myUserCards.width * 1/2 + 1/2*cardWidth + 2, 0 )
+    local containerWidth = myUserArea.myUserCards.width
+    local spacePerCard = containerWidth/ (table.maxn( myCards ))
+    for i =1, table.maxn( myCards ) do
+        transition.moveTo( myCards[i], {x = contentX + spacePerCard * (i-1), y= contentY, time = 200} )
     end
 end
+function updateCardCounter(event)
+        user2Area.numOfCardsUser2.text = table.maxn( user2Cards )
 
+        user3Area.numOfCardsUser3.text = table.maxn( user3Cards )
+        
+        user4Area.numOfCardsUser4.text = table.maxn( user4Cards )
 
+        sceneGroup.numOfCardsDeck.text = table.maxn( cards ) - handCardIndex + 1 .. " /52"
+end
+timer.performWithDelay( 1000, updateCardCounter, 0 )
+--timer.performWithDelay( rearrangeTimer, reArrangeMyCards, 0 )
+function printAllTheCards()
+            print ("---------My Cards--------")
+            for i=1, table.maxn(myCards) do
+                print ("my cards: " .. myCards[i].value .. " @" ..myCards[i].x .." " .. myCards[i].y)
+            end
+            print ("-----------------") 
+
+            print ("---------User2 Cards--------")
+            for i=1, table.maxn(user2Cards) do
+                print ("my cards: " .. user2Cards[i].value .. " @" ..user2Cards[i].x .." " .. user2Cards[i].y)
+            end
+
+            print ("---------User3 Cards--------")
+            for i=1, table.maxn(user3Cards) do
+                print ("my cards: " .. user3Cards[i].value .. " @" ..user3Cards[i].x .." " .. user3Cards[i].y)
+            end
+
+            print ("---------User4 Cards--------")
+            for i=1, table.maxn(user4Cards) do
+                print ("my cards: " .. user4Cards[i].value .. " @" ..user4Cards[i].x .." " .. user4Cards[i].y)
+            end
+
+            print ("-----------------") 
+            print ("---------PlayArea Cards--------")
+            for i=1, table.maxn(playAreaGroupCards) do
+                print ("playarea group cards: " .. playAreaGroupCards[i].value .. " @" ..playAreaGroupCards[i].x .." " .. playAreaGroupCards[i].y)
+            end
+            print ("-----------------")
+end
 -------------------------------Scene Create/Show/Destroy-----------------------------------------
 function scene:create( event )
 	sceneGroup = self.view
-    shuffleCards(deckOfCards)
-	-- display a background image
-	local background = display.newImageRect( "main-menu-background.png", display.actualContentWidth, display.actualContentHeight )
-	background.anchorX = 0
-	background.anchorY = 0
-	background.x = 0 + display.screenOriginX
-	background.y = 0 + display.screenOriginY
-	sceneGroup:insert( background )
-	-- create/position logo/title image on upper-half of the screen
-    createMyUserObjects()
-    createUser2Objects()
-    createUser3Objects()
-    createUser4Objects()
-    createCardObjects()
 
+    createAllObjects(sceneGroup)
+
+    myUserArea = sceneGroup.myUserArea
+    user2Area = sceneGroup.user2Area
+    user3Area = sceneGroup.user3Area
+    user4Area = sceneGroup.user4Area
+    cards = sceneGroup.cards
+    backCards = sceneGroup.backCards
+    playAreaGroup = sceneGroup.playAreaGroup
+    cardHeight = sceneGroup.cardHeight
+    cardWidth = sceneGroup.cardWidth
+
+    shuffleCards(cards)
+
+    
     local playArea = display.newRect( 0, 0, maxX/2,  maxY/2)
         playArea:setFillColor( .7, .4)
         playArea.alpha = .3
@@ -363,8 +654,6 @@ function scene:create( event )
         playArea.y = centerY
     playAreaGroup.playArea = playArea
 	
-    
-
     sceneGroup:insert(playArea)
 end
 function scene:show( event )
@@ -378,8 +667,10 @@ function scene:show( event )
 		--
 		-- INSERT code here to make the scene come alive
 		-- e.g. start timers, begin animation, play audio, etc.
-		physics.start()
+		--physics.start()
+
     dealCards(6)
+    printAllTheCards()
 	end
 end
 function scene:destroy( event )
@@ -396,99 +687,6 @@ function scene:destroy( event )
 	end
 end
 
----------CREATE HELPERS ---------
-function createMyUserObjects()
-    local myUserCards = display.newRect( 0, 0, display.actualContentWidth -28,  cardHeight+2)
-        myUserCards.strokeWidth = 3
-        myUserCards:setFillColor( 0.7, .4 )
-        myUserCards:setStrokeColor( 1, 0, 0, .4 )
-        myUserCards.x = centerX 
-        myUserCards.y = display.actualContentHeight - 120
-        myUserCards.alpha = 1
-    local doneButton = widget.newButton
-        {
-            x = centerX, 
-            y=myUserCards.y + 55, 
-            width = 100, 
-            height = 30, 
-            defaultFile = "doneButton.png",
-            label= "done",
-            labelColor = { default={ 1, 1, 1, .6 }, over={ 0, 0, 0, 0.5 }},
-            onPress = doneButtonPressed,
-        }
-        doneButton:setFillColor( 0 )
-
-        ------------------------------
-    sceneGroup:insert(myUserCards)
-    sceneGroup.doneButton = doneButton
-    sceneGroup:insert(doneButton)
-end
-function createUser2Objects()
-    local user2 = display.newRect( 0, 0, cardWidth, cardHeight)
-        user2.strokeWidth = 3
-        user2:setFillColor( 0.7, .4 )
-        user2:setStrokeColor( 1, 0, 0, .4 )
-        user2.x = zeroX + 30
-        user2.y = centerY
-        user2.alpha = .2
-
-    local text = display.newText( "Remaining Cards: ", user2.x + 10, user2.y + 40, native.systemFont, 10)
-    local numOfCardsUser2 = display.newText( "0", text.x, text.y+15, native.systemFont, 10)
-    
-    sceneGroup.numOfCardsUser2 = numOfCardsUser2
-    sceneGroup:insert(numOfCardsUser2)
-    sceneGroup:insert(user2)
-end
-function createUser3Objects()
-    local user3 = display.newRect( 0, 0, cardWidth,  cardHeight)
-        user3.strokeWidth = 3
-        user3:setFillColor( .7, .4)
-        user3:setStrokeColor( 1, 0, 0, .4 )
-        user3.x = centerX
-        user3.y = zeroY + 30
-        user3.alpha = 1.0
-
-    local text = display.newText( "Remaining Cards: ", user3.x + 10, user3.y + 40, native.systemFont, 10)
-    local numOfCardsUser3 = display.newText( "0", text.x, text.y+15, native.systemFont, 10)
-
-    
-    sceneGroup.numOfCardsUser3 = numOfCardsUser3
-    sceneGroup:insert(numOfCardsUser3)
-    sceneGroup:insert(user3)
-end
-function createUser4Objects()
-    local user4 = display.newRect( 0, 0, cardWidth, cardHeight)
-        user4.strokeWidth = 3
-        user4:setFillColor( 0.7, .4 )
-        user4:setStrokeColor( 1, 0, 0, .4 )
-        user4.x = maxX - 30
-        user4.y = centerY
-        user4.alpha = 1
-
-
-    local text = display.newText( "Remaining Cards: ", user4.x + 10, user4.y + 40, native.systemFont, 10)
-    local numOfCardsUser4 = display.newText( "0", text.x, text.y+15, native.systemFont, 10)
-
-    
-    sceneGroup.numOfCardsUser4 = numOfCardsUser4
-    sceneGroup:insert(numOfCardsUser4)
-    sceneGroup:insert(user4)
-end
-function createCardObjects()
-    for i = 1, 52 do
-        local cardFront = display.newImage("DeckOfCards/".. deckOfCards[i]..".png", zeroX + cardWidth/2, zeroY + cardHeight/2)
-            cardFront.width= cardWidth
-            cardFront.height = cardHeight
-            cardFront.isVisible = false
-            cardFront.value = deckOfCards[i]
-        cards[i] = cardFront
-        local cardBack = display.newImage("DeckOfCards/faceDown.png", zeroX + cardWidth/2, zeroY + cardHeight/2)
-            cardBack.width= cardWidth
-            cardBack.height = cardHeight
-        backCards[i] = cardBack
-        sceneGroup:insert(cardBack)
-    end
-end
 ---------------------------------------------------------------------------------
 
 -- Listener setup
