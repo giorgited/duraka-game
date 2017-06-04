@@ -36,11 +36,26 @@ function doneButtonPressed (event)
         if cardWasAdded then
             hand1Helper()
         else
-            print ("sefsefsefe")
             clearPlayArea(true)
             hand = hand + 1
             GamePlay()
-        end  
+        end 
+    elseif hand == 2 then
+        if cardWasAdded then
+            hand2Helper()
+        else 
+            clearPlayArea(true)
+            hand = hand + 1
+            GamePlay()
+        end
+    elseif hand == 4 then
+        if cardWasAdded then
+            hand4Helper()
+        else
+           clearPlayArea(false, myCards)
+           hand =  2
+           GamePlay()
+       end
     end
 end
 function hand1Helper()
@@ -63,6 +78,22 @@ function hand1Helper()
             end)
         else 
             ClearTheBoard(false, user2Cards)
+            hand = hand + 2
+            GamePlay()
+        end
+end
+function hand2Helper()
+    local didCut = CutCards(user3Cards)
+        print("user 3 was able to cut: " .. tostring(didCut))
+        if didCut then 
+            AddCards(user2Cards)
+            timer.performWithDelay(800, function () 
+                                        AddCards(user4Cards) 
+                                        cardWasAdded = false
+                                        timer.performWithDelay(400, function () YourTurn("add") end)
+                                        end)
+        else 
+            ClearTheBoard(false, user3Cards)
             hand = hand + 2
             GamePlay()
         end
@@ -153,36 +184,60 @@ function dealCards(numberPerPerson)
 end
 
 function GamePlay()
+
+    print ("working with: hand# " .. hand)
+    if hand > 4 then hand = 1 end
     if hand ==1 then
+        print ("Working in hand 1")
         cardWasAdded = false
         YourTurn("start")
     elseif hand == 2 then
-        print ("i got to hand 2")
+        print ("Working in hand 2")
         timer.performWithDelay(2000, function() 
+            print ("user 2 is about to add card")
             AddCards(user2Cards)
-            local didCut = CutCards(user3Cards)
-            if didCut == true then
-                AddCards(user4Cards)
-                YourTurn("add")
-            else
-                ClearTheBoard(false, user3Cards)
-            end
+            timer.performWithDelay(1000, function () 
+                    print ("user 3 is about to cut card")
+                    local didCut = CutCards(user3Cards) 
+                    if didCut == true then
+                        print ("user 3 did cut card, user 4 is about to add")
+                        AddCards(user4Cards)
+                        print ("your turn")
+                        YourTurn("add")
+                    else
+                        print ("user 3 did not cut card, clearing...")
+                        ClearTheBoard(false, user3Cards)
+                        hand = hand + 2
+                        GamePlay()
+                    end
+            end)
         end)
     elseif hand == 3 then
         print ("i got to hand 3")
-        timer.performWithDelay(2000, function() AddCards(user3Cards) 
+        timer.performWithDelay(2000, function() 
+            print ("user 3 is about to add card")
+            AddCards(user3Cards) 
             timer.performWithDelay(3000, function()
+                            print ("user 4 is about to cut card")
                             if didCut == CutCards(user4Cards) then 
+                                print ("user 4 is did cut card, yoour turn")
                                 YourTurn("add")
                             else
+                                print ("user 4 did not cut card, clearing...")
                                 ClearTheBoard(false, user4Cards)
+                                hand = hand + 2
+                                GamePlay()
                             end
             end)
         end)
     elseif hand == 4 then
         print ("i got to hand 4")
-        AddCards(user4Cards)
-        YourTurn("cut")
+        timer.performWithDelay(2000, function() 
+            AddCards(user4Cards)
+            timer.performWithDelay(3000, function()
+                YourTurn("cut")
+            end)
+        end)
     end
 end
 function YourTurn(request)
@@ -190,7 +245,7 @@ function YourTurn(request)
     if(request == "start") then
         myUserArea.doneButton:setFillColor( 1 )
         myUserArea:localToContent( 0, 0 )
-        transition.moveBy(myUserArea.yourTurnText, {delay = 2000, x=-120, y=50, onStart = function () 
+        transition.moveBy(myUserArea.yourTurnText, {delay = 2000, x=0, y=-50, onStart = function () 
                                                         myUserArea.yourTurnText.isVisible = true 
                                                         myUserArea.yourTurnText.text = "Your Turn"
                                                     end})
@@ -203,6 +258,13 @@ function YourTurn(request)
                                                         myUserArea.yourTurnText.text = "Would You Like To Add?"
                                                     end})
     elseif request == "cut" then
+        myUserArea.doneButton:setFillColor( 1 )
+        myUserArea:localToContent( 0, 0 )
+        transition.moveBy(myUserArea.yourTurnText, {delay = 500, x=0, y=-50, 
+                                                    onStart = function () 
+                                                        myUserArea.yourTurnText.isVisible = true 
+                                                        myUserArea.yourTurnText.text = "Your Turn To Cut"
+                                                    end})
     end
 end
 function AddCards(userCards)
@@ -254,9 +316,10 @@ function AddCardsHelper(usersCards, cardsList)
                                     end}) 
 end
 function AddMyCard(card)
+    print ("got to: AddMyCard -- " ..tostring(yourTurn) .. hand )
     local cardValue = getCardValue(card)
     local cardAdded = false
-    if(yourTurn) then
+    if(yourTurn and hand ~= 4 ) then
         if (table.maxn(playAreaGroupCards) == 0) then
             local nextSpot = findNextPlayAreaSpot()
             nextSpot.x = nextSpot.moveToX
@@ -284,8 +347,22 @@ function AddMyCard(card)
                 cardAdded = true
             end
         end
-        return cardAdded
+    elseif hand == 4 then
+        print("its my turn to cut the cards....")
+        local canAdd = false
+        for i=1, table.maxn(playAreaGroupCards) do
+            local value = getCardValue(playAreaGroupCards[i])
+            if (cardValue > value) then
+                print("its my turn to cut the cards.... i can with .. " .. cardValue .. " on " .. value)
+                local nextSpot = {}
+                nextSpot.x, nextSpot.y = playAreaGroupCards[i].x + 20, playAreaGroupCards[i].y
+                addMyCardHelper(card, myCards, nextSpot)
+                transition.moveBy(myUserArea.yourTurnText, {delay = 1000, x=moveX, y=moveY})
+                return
+            end  
+        end
     end
+    return cardAdded
 end
 function addMyCardHelper (card, usersCards, spot)
     print ("adding: " .. card.value)
