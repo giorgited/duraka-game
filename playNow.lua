@@ -161,25 +161,22 @@ function doneButtonPressed (event)
             GamePlay()
         end
     elseif hand == 4 then
-        if cardWasAdded then
-            local unCutCards = {}
-            for i=1, table.maxn (playAreaGroupCards) do 
-                if (playAreaGroupCards[i].hasBeenCut == false) then
-                    table.insert(unCutCards, playAreaGroupCards[i])
-                end
+        local unCutCards = {}
+        print ("*********************************************************************")
+        for i=1, table.maxn (playAreaGroupCards) do 
+            if (playAreaGroupCards[i].hasBeenCut == false) then
+                table.insert(unCutCards, playAreaGroupCards[i])
             end
-            if (table.maxn(unCutCards) > 0 ) then
-                ClearTheBoard(false, myCards)
-                hand =  2
-                GamePlay()
-            else
-                hand4Helper()
-            end
+        end
+
+        if (table.maxn(unCutCards) > 0 ) then
+            print ("uncut cards: " .. unCutCards[1].value)
+            ClearTheBoard(false, myCards)
+            hand =  2
+            GamePlay()
         else
-           ClearTheBoard(false, myCards)
-           hand =  2
-           GamePlay()
-       end
+            hand4Helper()
+        end
     end
 end
 function hand1Helper()
@@ -288,7 +285,6 @@ function hand4Helper()
 end
 local del = 500;
 function dealMe(numberOfCards)
-    print ("handCardIndex: " .. handCardIndex)
       if (handCardIndex > 53) then 
             deckIsEmpty = true
             return 
@@ -321,7 +317,6 @@ function dealMeHelper(numberOfCards)
     dealMe(numberOfCards)
 end
 function dealUser2(numberOfCards)
-    print ("handCardIndex: " .. handCardIndex)
     for i=1, numberOfCards do
         if (handCardIndex > 52) then 
             deckIsEmpty = true
@@ -342,7 +337,6 @@ function dealUser2(numberOfCards)
     end
 end
 function dealUser3(numberOfCards)
-    print ("handCardIndex: " .. handCardIndex)
     for i=1, numberOfCards do
         if (handCardIndex > 52) then 
             deckIsEmpty = true
@@ -362,7 +356,6 @@ function dealUser3(numberOfCards)
     end
 end
 function dealUser4(numberOfCards)
-    print ("handCardIndex: " .. handCardIndex)
     for i=1, numberOfCards do
           if (handCardIndex > 52) then 
             deckIsEmpty = true
@@ -382,11 +375,11 @@ function dealUser4(numberOfCards)
      end
 end
 function dealCards(numberPerPerson)
-    dealMe(6)
-    dealUser2(6)
-    dealUser3(6)
-    dealUser4(6)
-    
+    dealMe(13)
+    dealUser2(13)
+    dealUser3(13)
+    dealUser4(13)
+    timer.performWithDelay(4000, reArrangeMyCards)
     yourTurn = true
 end
 
@@ -464,7 +457,7 @@ function AddCards(userCards)
             local cardsList = {}
             for i=1, table.maxn(userCards) do
                 local cardSuit = getCardSuit(userCards[i])
-                if deckIsEmpty then
+                if deckIsEmpty ~= true then
                     if cardSuit ~= cutterSuit then
                         local value = getCardValue (userCards[i])
                         table.insert(cardsList, tonumber(value))
@@ -489,37 +482,45 @@ function AddCards(userCards)
         else
             local addCardsList = {}
             local canAdd = false
-            for i=1, table.maxn(userCards) do
-                local cardValue = getCardValue(userCards[i])
-                for x=1, table.maxn(playAreaGroupCards) do
-                    local cardSuit = getCardSuit(userCards[i])
-                    local value = getCardValue(playAreaGroupCards[x])
-                    if (cardSuit ~= cutterSuit) then
-                        if (value == cardValue) then
-                            table.insert(addCardsList, userCards[i])
-                        end  
-                    end
+            local temp = userCards
+
+            for x=1, table.maxn(playAreaGroupCards) do
+                local size = table.maxn(temp)
+                for i = 1, size do
+                    if i >= size then break end
+                    if getCardValue(temp[i]) == getCardValue(playAreaGroupCards[x]) then
+                        if (getCardSuit(temp[i]) ~= cutterSuit) then
+                            table.insert(addCardsList, temp[i])
+                            print ("addiing " .. temp[i].value .. " to stack, because it matched " .. playAreaGroupCards[x].value )
+                            table.remove(temp,i)
+                            size = size - 1
+                        end
+                    end 
                 end
             end
+            print ("about to " .. table.maxn(addCardsList))
             AddCardsHelper(userCards, addCardsList)
         end
     end
 end
 function AddCardsHelper(usersCards, cardsList)
-    print (cardsList)
     if table.maxn(cardsList) == 0 then return end
     local card = cardsList[1]
+    print("*********adding ***********   " .. card.value .. " and will do it again : ".. table.maxn(cardsList) .." times. added by: " .. usersCards.name)
     local emptySpot = findNextPlayAreaSpot()
     removedCardIndex = table.indexOf(usersCards, card)
     table.remove(usersCards, removedCardIndex)
     table.insert(playAreaGroupCards, card)
     table.remove(cardsList, 1)
     card.hasBeenCut = false
-    AddCardsHelper(usersCards, cardsList)
+    
+
     local x = transition.moveTo(card, {x= emptySpot.moveToX, y=emptySpot.moveToY, time=400,
                                     onStart = function ()
+                                    print ("moving " .. card.value .. "from " .. usersCards.name)
                                         card.isVisible = true
-                                    end})
+                                    end,
+                                    onComplete = function () AddCardsHelper(usersCards, cardsList) end})
 end
 function AddMyCard(card, validatedParam)
     local cardValue = getCardValue(card)
@@ -534,13 +535,12 @@ function AddMyCard(card, validatedParam)
         else
             local canAdd = false
             for i=1, table.maxn(playAreaGroupCards) do
-                local length = string.len(playAreaGroupCards[i].value)
                 local value = getCardValue(playAreaGroupCards[i])
                 if (value == cardValue) then
                     canAdd = true
                 end  
             end
-            if (canAdd) then
+            if (canAdd) then                
                 local nextSpot = findNextPlayAreaSpot()
                 nextSpot.x = nextSpot.moveToX
                 nextSpot.y = nextSpot.moveToY
@@ -570,13 +570,7 @@ function addMyCardHelper (card, usersCards, spot)
 
         transition.moveTo(card, {x=moveToX, y=moveToY, time=300,
                  onComplete = function ()
-                        card.hasBeenCut = false
                         table.insert(playAreaGroupCards, card)
-                        updateTimerCounter = 1000
-                        --timer.resume(updateTimer)
-                        if (hand ==4 ) then
-                            card.hasBeenCut = true
-                        end
                     end
                     })       
 end
@@ -684,30 +678,38 @@ function ClearTheBoard(cut, userCards)
     timer.performWithDelay(1000,function () fillUpUsers() end )
 end
 function ValidateMyCut(card)
+    --printAllTheCards()
     local result = {}
+    local paired = false
     result.canCut = false
-    printUserCards(playAreaGroupCards)
     for i=1, table.maxn(playAreaGroupCards) do
-        if playAreaGroupCards[i].hasBeenCut ~= true then
+        if playAreaGroupCards[i].hasBeenCut == false then
             local myCardSuit = getCardSuit(card)
             local myCardValue = getCardValue(card)
             local cardSuit = getCardSuit(playAreaGroupCards[i])
             local cardValue = getCardValue(playAreaGroupCards[i])
             if (myCardSuit == cardSuit) then
+                print ("Same Suit")
                 if ( tonumber(myCardValue) > tonumber(cardValue) ) then
                     playAreaGroupCards[i].hasBeenCut = true
+                    print ("cancelled out!!!!: " .. playAreaGroupCards[i].value)
                     result.canCut = true
+                    paired = true
                     result.x = playAreaGroupCards[i].x + 20
                     result.y = playAreaGroupCards[i].y
-                    return result
+--                    return result
                 end
             elseif (myCardSuit == cutterSuit) then
+                print ("cutter Suit")
                     playAreaGroupCards[i].hasBeenCut = true
+                    print ("cancelled out!!!!: " .. playAreaGroupCards[i].value)
                     result.canCut = true
+                    paired = true
                     result.x = playAreaGroupCards[i].x + 20
                     result.y = playAreaGroupCards[i].y
-                    return result
+                    --return result
             end
+            if paired then print ("trying to break") return result end
         end
     end
     return result
@@ -858,8 +860,6 @@ function findNextPlayAreaSpot()
         return result
 end
 function reArrangeMyCards()
-    print ("Rearangin cards..")
-    printUserCards(myCards)
     if (table.maxn( myCards ) <= 6 ) then
         local cx, cy = myUserArea.myUserCards:localToContent(0,0)
         local initialSpot = cx - 1/2*myUserArea.myUserCards.width + 1/2*cardWidth+2
@@ -886,7 +886,6 @@ function reArrangeMyCards()
             del = del + 200
         end
     end
-    printUserCards(myCards)
 end
 function updateCardCounter(event)
         user2Area.numOfCardsUser2.text = table.maxn( user2Cards )
