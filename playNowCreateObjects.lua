@@ -33,6 +33,9 @@ function createAllObjects(sceneGroup)
     background.anchorY = 0
     background.x = 0 + display.screenOriginX
     background.y = 0 + display.screenOriginY
+    background.fill.effect = "filter.brightness"
+    background.fill.effect.intensity = -.3
+
     sceneGroup:insert( background )
 
     createSceneGrid(sceneGroup)
@@ -41,6 +44,8 @@ function createAllObjects(sceneGroup)
     createUser3Objects(sceneGroup)
     createUser4Objects(sceneGroup)
     createCardObjects(sceneGroup)
+
+    local cutterSuit = display.newText( "Cutter Suit", maxX - 32, zeroY + sceneGroup.cardHeight/2 - 10, native.systemFontBold, 12)
 end
 function storeSharedVariables(sceneGroup)
     sceneGroup.cardWidth = (maxX - 30)/6
@@ -86,13 +91,12 @@ function createSceneGrid(sceneGroup)
 end
 
 function createMyUserObjects(sceneGroup)
-    local yourTurnText = display.newText( "Your Turn",0,0, native.systemFontBold, 16)
-    yourTurnText.isVisible = false
+    local yourTurnText = display.newText( "Your Turn",0, 0, native.systemFontBold, 16)
     myUserArea.yourTurnText = yourTurnText
     myUserArea:insert(yourTurnText)
 
     yourTurnText.x = 0
-    yourTurnText.y = 0
+    yourTurnText.y = -50
     local myUserCards = display.newRect( 0, 0, sceneGroup.cardWidth*6,  sceneGroup.cardHeight)
         myUserCards.strokeWidth = 3
         myUserCards:setFillColor( 0.7, .4 )
@@ -125,7 +129,8 @@ function createUser2Objects(sceneGroup)
         user2CardContainer:setFillColor( 0.7, .4 )
         user2CardContainer:setStrokeColor( 1, 0, 0, .4 )
         
-    local text = display.newText( "Remaining Cards: ", user2CardContainer.x, user2CardContainer.y + 1/2*sceneGroup.cardHeight + 15, native.systemFont, 10)
+    local title = display.newText( "User 2", user2CardContainer.x, user2CardContainer.y + 1/2*sceneGroup.cardHeight + 5, native.systemFontBold, 12)
+    local text = display.newText( "Remaining Cards: ", title.x, title.y + 15, native.systemFont, 10)
     local numOfCardsUser2 = display.newText( "0", text.x, text.y + 15, native.systemFont, 10)
     numOfCardsUser2.value = 0
 
@@ -134,6 +139,7 @@ function createUser2Objects(sceneGroup)
     user2Area.user2CardContainer = user2CardContainer
     user2Area:insert(user2CardContainer)
     user2Area.text = text
+    user2Area:insert(title)
     user2Area:insert(text)
     user2Area.numOfCardsUser2 = numOfCardsUser2
     user2Area:insert(numOfCardsUser2)
@@ -148,10 +154,12 @@ function createUser3Objects(sceneGroup)
         user3CardContainer:setFillColor( .7, .4)
         user3CardContainer:setStrokeColor( 1, 0, 0, .4 )
         
-    local text = display.newText( "Remaining Cards: ", user3CardContainer.x, user3CardContainer.y + 40, native.systemFont, 10)
+    local title = display.newText( "User 3", user3CardContainer.x, user3CardContainer.y + 1/2*sceneGroup.cardHeight + 5, native.systemFontBold, 12)
+    local text = display.newText( "Remaining Cards: ", title.x, title.y + 15, native.systemFont, 10)
     local numOfCardsUser3 = display.newText( "0", text.x, text.y+15, native.systemFont, 10)
     numOfCardsUser3.value = 0
     
+    user3Area:insert(title)
     user3Area.user3CardContainer = user3CardContainer
     user3Area:insert(user3CardContainer)
     user3Area.text = text
@@ -167,12 +175,12 @@ function createUser4Objects(sceneGroup)
         user4CardContainer:setFillColor( 0.7, .4 )
         user4CardContainer:setStrokeColor( 1, 0, 0, .4 )
 
-
-    local text = display.newText( "Remaining Cards: ", user4CardContainer.x, user4CardContainer.y + 40, native.systemFont, 10)
+    local title = display.newText( "User 4", user4CardContainer.x, user4CardContainer.y + 1/2*sceneGroup.cardHeight + 5, native.systemFontBold, 12)
+    local text = display.newText( "Remaining Cards: ", title.x, title.y + 15, native.systemFont, 10)
     local numOfCardsUser4 = display.newText( "0", text.x, text.y+15, native.systemFont, 10)
     numOfCardsUser4.value = 0
     
-
+    user4Area:insert(title)
     user4Area.user4CardContainer = user4CardContainer
     user4Area:insert(user4CardContainer)
     user4Area.text = text
@@ -184,6 +192,7 @@ function createUser4Objects(sceneGroup)
 end
 function createCardObjects(sceneGroup)
    sceneGroup.cards ={}
+
     for i = 1, 52 do
         local cardFront = display.newImage("DeckOfCards/".. deckOfCards[i].."-min.jpg", zeroX + sceneGroup.cardWidth/2, zeroY + sceneGroup.cardHeight/2)
             cardFront.width= sceneGroup.cardWidth
@@ -201,6 +210,7 @@ function createCardObjects(sceneGroup)
     end
 
     sceneGroup.backCards = backCards
+
 
     local numOfCardsDeck = display.newText( "52/52", zeroX + sceneGroup.cardWidth/2 , zeroY + sceneGroup.cardHeight, native.systemFontBold, 12)
     numOfCardsDeck:setFillColor( black )

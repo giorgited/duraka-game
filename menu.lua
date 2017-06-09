@@ -42,11 +42,9 @@ function scene:create( event )
 	local centerX = display.contentCenterX
 	local centerY = display.contentCenterY
 	-- create/position logo/title image on upper-half of the screen
-	local titleLogo = display.newText( "Joker Game", centerX, 0, native.systemFont, 55)
+	local titleLogo = display.newText( "Duraka", centerX, 60, native.systemFont, 55)
 	titleLogo:setFillColor( 0, 0, 0 )
 
-  local subtitleLogo = display.newText( "Main Menu", centerX, 50, native.systemFont, 25)
-	subtitleLogo:setFillColor( 1, 0, 0 )
 
 	local cardsImg = display.newImage("cards.png", centerX, 200)
 				cardsImg.width = 150
@@ -104,7 +102,6 @@ function scene:create( event )
 	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
 	sceneGroup:insert( titleLogo )
-	sceneGroup:insert( subtitleLogo )
 	sceneGroup:insert( playBtn)
 	sceneGroup:insert( playTxt )
 	sceneGroup:insert( howToBtn)

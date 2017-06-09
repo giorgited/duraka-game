@@ -183,6 +183,28 @@ function findNextPlayAreaSpot()
         result.moveToY = moveToY
         return result
 end
+function findSpots()
+    local result = {}
+
+    local spot
+    spot.x = playAreaX + 50
+    spot.y = playAreaY - 100
+    table.insert(result,spot)
+    spot.x = playAreaX - 50 
+    spot.y = playAreaY 
+    table.insert(result,spot)
+    spot.x = playAreaX + 50 
+    spot.y = playAreaY
+    table.insert(result,spot)
+    spot.x = playAreaX - 50
+    spot.y = playAreaY + 100
+    table.insert(result,spot)
+    spot.x = playAreaX + 50
+    spot.y = playAreaY + 100
+    table.insert(result,spot)
+
+    return result
+end
 function getCardValue (card)
     return card.value:sub(1, string.len(card.value) - 1)
 end
