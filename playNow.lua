@@ -25,6 +25,7 @@ local firstCardSpot
 local deckIsEmpty = false
 local updateTimerCounter = 1000
 math.randomseed(os.time())
+
 --------------------------------------------------------------------------------------------------
 function cardTapped(event)
     --timer.pause(updateTimer)
