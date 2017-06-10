@@ -28,10 +28,10 @@ math.randomseed(os.time())
 
 --------------------------------------------------------------------------------------------------
 function cardTapped(event)
-    --timer.pause(updateTimer)
     cardWasAdded = true
     if (hand == 4 ) then
         local validateResult = ValidateMyCut(event.target)
+        print ("point 1: target is going to : " .. validateResult.x .. " " .. validateResult.y)
         if validateResult.canCut==true then
             AddMyCard(event.target, validateResult)
         else 
@@ -523,6 +523,7 @@ function AddCardsHelper(usersCards, cardsList)
                                     onComplete = function () AddCardsHelper(usersCards, cardsList) end})
 end
 function AddMyCard(card, validatedParam)
+    print ("point 2: target is going to : " .. validatedParam.x .. " " .. validatedParam.y)
     local cardValue = getCardValue(card)
     local cardAdded = false
     if(yourTurn and hand ~= 4 ) then
@@ -551,6 +552,7 @@ function AddMyCard(card, validatedParam)
             end
         end
     elseif hand == 4 then
+        print ("point 3: target is going to : " .. validatedParam.x .. " " .. validatedParam.y)
         cardAdded = true
         local nextSpot = {}
         nextSpot.x, nextSpot.y = validatedParam.x, validatedParam.y
@@ -559,16 +561,14 @@ function AddMyCard(card, validatedParam)
     return cardAdded
 end
 function addMyCardHelper (card, usersCards, spot)
-        local moveToX  = spot.x
-        local movetoY  = spot.y
-
+    print ("point 4: target is going to : " .. spot.x .. " " .. spot.y)
         local removedCardIndex
 
         card.isVisible = true
         removedCardIndex = table.indexOf(usersCards, card)
         table.remove(usersCards, removedCardIndex)
 
-        transition.moveTo(card, {x=moveToX, y=moveToY, time=300,
+        transition.moveTo(card, {x=spot.x, y=spot.y, time=300,
                  onComplete = function ()
                         table.insert(playAreaGroupCards, card)
                     end
