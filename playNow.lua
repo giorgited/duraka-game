@@ -573,6 +573,8 @@ function addMyCardHelper (card, usersCards, spot)
                         table.insert(playAreaGroupCards, card)
                     end
                     })       
+
+        
 end
 function CutCards(userCards)
     UpdateStatusBar(userCards.name .. " is Cutting The Cards !")
