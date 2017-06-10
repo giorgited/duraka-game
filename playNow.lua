@@ -163,7 +163,6 @@ function doneButtonPressed (event)
         end
     elseif hand == 4 then
         local unCutCards = {}
-        print ("*********************************************************************")
         for i=1, table.maxn (playAreaGroupCards) do 
             if (playAreaGroupCards[i].hasBeenCut == false) then
                 table.insert(unCutCards, playAreaGroupCards[i])
@@ -171,7 +170,6 @@ function doneButtonPressed (event)
         end
 
         if (table.maxn(unCutCards) > 0 ) then
-            print ("uncut cards: " .. unCutCards[1].value)
             ClearTheBoard(false, myCards)
             hand =  2
             GamePlay()
@@ -330,6 +328,7 @@ function dealUser2(numberOfCards)
           cards[handCardIndex].y = contentY
           cards[handCardIndex].isVisible = false
           table.insert(user2Cards, cards[handCardIndex])
+          sceneGroup.cards[handCardIndex]:addEventListener( "tap", cardTapped )
 
           transition.moveTo(backCards[handCardIndex], {delay = del, x = contentX, y = contentY, time=100})
           table.insert( user2backCards, backCards[handCardIndex] )
@@ -350,6 +349,8 @@ function dealUser3(numberOfCards)
           cards[handCardIndex].y = contentY
           cards[handCardIndex].isVisible = false
           table.insert(user3Cards, cards[handCardIndex])
+          sceneGroup.cards[handCardIndex]:addEventListener( "tap", cardTapped )
+
           transition.moveTo(backCards[handCardIndex], {delay= del,x=contentX, y=contentY, time=100})
           table.insert( user3backCards, backCards[handCardIndex] )
           del = del + 50
@@ -369,6 +370,8 @@ function dealUser4(numberOfCards)
           cards[handCardIndex].y = contentY
           cards[handCardIndex].isVisible = false
           table.insert(user4Cards, cards[handCardIndex])
+          sceneGroup.cards[handCardIndex]:addEventListener( "tap", cardTapped )
+
           transition.moveTo(backCards[handCardIndex], {delay= del,x=contentX, y=contentY, time=100})
           table.insert( user4backCards, backCards[handCardIndex] )
           del = del + 50
@@ -376,10 +379,10 @@ function dealUser4(numberOfCards)
      end
 end
 function dealCards(numberPerPerson)
-    dealMe(13)
-    dealUser2(13)
-    dealUser3(13)
-    dealUser4(13)
+    dealMe(10)
+    dealUser2(10)
+    dealUser3(10)
+    dealUser4(10)
     timer.performWithDelay(4000, reArrangeMyCards)
     yourTurn = true
 end
@@ -492,14 +495,12 @@ function AddCards(userCards)
                     if getCardValue(temp[i]) == getCardValue(playAreaGroupCards[x]) then
                         if (getCardSuit(temp[i]) ~= cutterSuit) then
                             table.insert(addCardsList, temp[i])
-                            print ("addiing " .. temp[i].value .. " to stack, because it matched " .. playAreaGroupCards[x].value )
                             table.remove(temp,i)
                             size = size - 1
                         end
                     end 
                 end
             end
-            print ("about to " .. table.maxn(addCardsList))
             AddCardsHelper(userCards, addCardsList)
         end
     end
@@ -507,7 +508,6 @@ end
 function AddCardsHelper(usersCards, cardsList)
     if table.maxn(cardsList) == 0 then return end
     local card = cardsList[1]
-    print("*********adding ***********   " .. card.value .. " and will do it again : ".. table.maxn(cardsList) .." times. added by: " .. usersCards.name)
     local emptySpot = findNextPlayAreaSpot()
     removedCardIndex = table.indexOf(usersCards, card)
     table.remove(usersCards, removedCardIndex)
@@ -518,7 +518,6 @@ function AddCardsHelper(usersCards, cardsList)
 
     local x = transition.moveTo(card, {x= emptySpot.moveToX, y=emptySpot.moveToY, time=400,
                                     onStart = function ()
-                                    print ("moving " .. card.value .. "from " .. usersCards.name)
                                         card.isVisible = true
                                     end,
                                     onComplete = function () AddCardsHelper(usersCards, cardsList) end})
@@ -679,7 +678,7 @@ function ClearTheBoard(cut, userCards)
     timer.performWithDelay(1000,function () fillUpUsers() end )
 end
 function ValidateMyCut(card)
-    --printAllTheCards()
+
     local result = {}
     local paired = false
     result.canCut = false
@@ -690,27 +689,23 @@ function ValidateMyCut(card)
             local cardSuit = getCardSuit(playAreaGroupCards[i])
             local cardValue = getCardValue(playAreaGroupCards[i])
             if (myCardSuit == cardSuit) then
-                print ("Same Suit")
                 if ( tonumber(myCardValue) > tonumber(cardValue) ) then
                     playAreaGroupCards[i].hasBeenCut = true
-                    print ("cancelled out!!!!: " .. playAreaGroupCards[i].value)
                     result.canCut = true
                     paired = true
                     result.x = playAreaGroupCards[i].x + 20
                     result.y = playAreaGroupCards[i].y
---                    return result
+                    break;
                 end
             elseif (myCardSuit == cutterSuit) then
-                print ("cutter Suit")
                     playAreaGroupCards[i].hasBeenCut = true
-                    print ("cancelled out!!!!: " .. playAreaGroupCards[i].value)
                     result.canCut = true
                     paired = true
                     result.x = playAreaGroupCards[i].x + 20
                     result.y = playAreaGroupCards[i].y
-                    --return result
+                    break;
             end
-            if paired then print ("trying to break") return result end
+            if paired then return result end
         end
     end
     return result
@@ -869,7 +864,7 @@ function reArrangeMyCards()
             transition.moveTo(myCards[i], {x=initialSpot + (i-1)*cardWidth, y=cy, time = 1})
             myCards[i].parent:insert(myCards[i])
             myCards[i].contentBounds.xMax = myCards[i].contentBounds.xMin + cardWidth
-            myCards[i]:addEventListener( "tap", cardTapped )
+            --myCards[i]:addEventListener( "tap", cardTapped )
         end
         
     else
@@ -882,7 +877,7 @@ function reArrangeMyCards()
             myCards[i].parent:insert(myCards[i])
             myCards[i].contentBounds.xMax = myCards[i].contentBounds.xMin + spacePerCard
             myCards[i].isVisible = true
-            myCards[i]:addEventListener( "tap", cardTapped )
+            --myCards[i]:addEventListener( "tap", cardTapped )
             transition.moveTo( myCards[i], {x = contentX + spacePerCard * (i-1), y= contentY, time = 1} )
             del = del + 200
         end
