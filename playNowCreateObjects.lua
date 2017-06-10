@@ -114,6 +114,14 @@ function createMyUserObjects(sceneGroup)
             onPress = doneButtonPressed,
         }
         doneButton:setFillColor( 0 )
+
+    local place = display.newText( "",0, 0, native.systemFontBold, 16)
+    place.x = doneButton.x - 100
+    place.y = doneButton.y
+    myUserArea.place = place
+    myUserArea:insert(place)
+
+
     myUserArea.myUserCards = myUserCards
     myUserArea:insert(myUserCards)
     myUserArea.doneButton = doneButton
@@ -134,14 +142,19 @@ function createUser2Objects(sceneGroup)
     local numOfCardsUser2 = display.newText( "0", text.x, text.y + 15, native.systemFont, 10)
     numOfCardsUser2.value = 0
 
-
+    local place = display.newText( "",0, 0, native.systemFontBold, 14)
+    place.x = user2CardContainer.x
+    place.y = user2CardContainer.y - 50
 
     user2Area.user2CardContainer = user2CardContainer
-    user2Area:insert(user2CardContainer)
     user2Area.text = text
+    user2Area.numOfCardsUser2 = numOfCardsUser2
+    user2Area.place  = place
+
+    user2Area:insert(user2CardContainer)
     user2Area:insert(title)
     user2Area:insert(text)
-    user2Area.numOfCardsUser2 = numOfCardsUser2
+    user2Area:insert(place)
     user2Area:insert(numOfCardsUser2)
 
     sceneGroup:insert(user2Area)
@@ -156,17 +169,24 @@ function createUser3Objects(sceneGroup)
         
     local title = display.newText( "User 3", user3CardContainer.x, user3CardContainer.y + 1/2*sceneGroup.cardHeight + 5, native.systemFontBold, 12)
     local text = display.newText( "Remaining Cards: ", title.x, title.y + 15, native.systemFont, 10)
+    local place = display.newText( "",0, 0, native.systemFontBold, 14)
+    place.x = user3CardContainer.x
+    place.y = user3CardContainer.y - 50
+
+
     local numOfCardsUser3 = display.newText( "0", text.x, text.y+15, native.systemFont, 10)
     numOfCardsUser3.value = 0
     
-    user3Area:insert(title)
     user3Area.user3CardContainer = user3CardContainer
-    user3Area:insert(user3CardContainer)
     user3Area.text = text
-    user3Area:insert(text)
     user3Area.numOfCardsUser3 = numOfCardsUser3
-    user3Area:insert(numOfCardsUser3)
+    user3Area.place = place
 
+    user3Area:insert(user3CardContainer)
+    user3Area:insert(title)
+    user3Area:insert(text)
+    user3Area:insert(place)
+    user3Area:insert(numOfCardsUser3)
     sceneGroup:insert(user3Area)
 end
 function createUser4Objects(sceneGroup)
@@ -177,15 +197,24 @@ function createUser4Objects(sceneGroup)
 
     local title = display.newText( "User 4", user4CardContainer.x, user4CardContainer.y + 1/2*sceneGroup.cardHeight + 5, native.systemFontBold, 12)
     local text = display.newText( "Remaining Cards: ", title.x, title.y + 15, native.systemFont, 10)
+
+    local place = display.newText( "",0, 0, native.systemFontBold, 14)
+    place.x = user4CardContainer.x
+    place.y = user4CardContainer.y - 50
+
     local numOfCardsUser4 = display.newText( "0", text.x, text.y+15, native.systemFont, 10)
     numOfCardsUser4.value = 0
     
-    user4Area:insert(title)
+    
     user4Area.user4CardContainer = user4CardContainer
-    user4Area:insert(user4CardContainer)
     user4Area.text = text
-    user4Area:insert(text)
     user4Area.numOfCardsUser4 = numOfCardsUser4
+    user4Area.place = place
+
+    user4Area:insert(title)
+    user4Area:insert(user4CardContainer)
+    user4Area:insert(text)
+    user4Area:insert(place)
     user4Area:insert(numOfCardsUser4)
 
     sceneGroup:insert(user4Area)

@@ -379,10 +379,10 @@ function dealUser4(numberOfCards)
      end
 end
 function dealCards(numberPerPerson)
-    dealMe(10)
-    dealUser2(10)
-    dealUser3(10)
-    dealUser4(10)
+    dealMe(6)
+    dealUser2(6)
+    dealUser3(6)
+    dealUser4(6)
     timer.performWithDelay(4000, reArrangeMyCards)
     yourTurn = true
 end
@@ -572,9 +572,7 @@ function addMyCardHelper (card, usersCards, spot)
                  onComplete = function ()
                         table.insert(playAreaGroupCards, card)
                     end
-                    })       
-
-        
+                    })              
 end
 function CutCards(userCards)
     UpdateStatusBar(userCards.name .. " is Cutting The Cards !")
