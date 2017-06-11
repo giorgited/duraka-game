@@ -22,7 +22,7 @@ local user2backCards,user3backCards, user4backCards = {}, {}, {}
 local handCardIndex = 1
 local yourTurn      = false
 local counter       = 1
-local hand          = 1
+local hand          = 3
 local cardWasAdded  = false
 local cutterSuit
 local deckIsEmpty = false
@@ -128,7 +128,7 @@ function doneButtonPressed (event)
             GamePlay()
         else
             timer.performWithDelay(500, function()
-                local cut = CutCards(user3Cards)
+                local cut = CutCards(getNextUserToCut())
                 if cut ~= true then
                     timer.performWithDelay(500, function()
                         ClearTheBoard(false, user3Cards)
@@ -180,7 +180,7 @@ function hand1Helper()
                     AddCards(user4Cards) 
                     timer.performWithDelay(2000, function()
                         cardWasAdded = false
-                        local didCutAgain = CutCards(user2Cards)
+                        local didCutAgain = CutCards(getNextUserToCut())
                         if didCutAgain then
                             cardWasAdded = false
                             YourTurn("add")
@@ -204,7 +204,7 @@ function hand1Helper()
 end
 function hand2Helper()
     timer.performWithDelay(2000, function ()
-        local didCut = CutCards(user3Cards)
+        local didCut = CutCards(getNextUserToCut())
             if didCut then 
                 timer.performWithDelay(2000, function ()
                     AddCards(user2Cards)
@@ -231,7 +231,7 @@ function hand3Helper()
         timer.performWithDelay(2000, function() 
             AddCards(user3Cards) 
             timer.performWithDelay(2000, function()
-                local didCut = CutCards(user4Cards)
+                local didCut = CutCards(getNextUserToCut())
                 if didCut then
                     cardWasAdded = false
                     timer.performWithDelay(400, function () 
@@ -277,7 +277,7 @@ function hand4Helper()
 end
 local del = 500;
 function dealMe(numberOfCards)
-      if (handCardIndex > 53) then 
+      if (handCardIndex > 52) then 
             deckIsEmpty = true
             return 
       end
@@ -409,7 +409,7 @@ function GamePlay()
         timer.performWithDelay(2000, function() 
             AddCards(user3Cards) 
             timer.performWithDelay(2000, function()
-                            local didCut = CutCards(user4Cards)
+                            local didCut = CutCards(getNextUserToCut())
                             if didCut == true then 
                                 cardWasAdded = false
                                 YourTurn("add")
@@ -469,9 +469,15 @@ function AddCards(userCards)
             for i=1, table.maxn(userCards) do
                 local cardSuit = getCardSuit(userCards[i])
                 local carValue = tonumber(getCardValue(userCards[i]))
-                if (cardSuit ~= cutterSuit) then
+                if deckIsEmpty ~= true then
+                    if (cardSuit ~= cutterSuit) then
+                        if (carValue == cardsList[1]) then
+                            table.insert(addCards, userCards[i] )
+                        end
+                    end
+                else
                     if (carValue == cardsList[1]) then
-                        table.insert(addCards, userCards[i] )
+                            table.insert(addCards, userCards[i] )
                     end
                 end
             end
@@ -479,7 +485,10 @@ function AddCards(userCards)
         else
             local addCardsList = {}
             local canAdd = false
-            local temp = userCards
+            local temp = {}
+            for i=1, table.maxn(userCards) do
+                table.insert(temp, userCards[i])
+            end
 
             for x=1, table.maxn(playAreaGroupCards) do
                 local size = table.maxn(temp)
@@ -503,7 +512,9 @@ function AddCardsHelper(usersCards, cardsList)
     local card = cardsList[1]
     local emptySpot = findNextPlayAreaSpot()
     removedCardIndex = table.indexOf(usersCards, card)
+
     table.remove(usersCards, removedCardIndex)
+ print ("removing .. " ..card.value .. " from " .. usersCards.name)
     table.insert(playAreaGroupCards, card)
     table.remove(cardsList, 1)
     card.hasBeenCut = false
