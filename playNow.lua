@@ -12,18 +12,22 @@ user2Cards.name = "User 2"
 user3Cards.name = "User 3"
 user4Cards.name = "User 4"
 myCards.name    = "Your User"
+local playersInGame = {}
+table.insert(playersInGame, myCards )
+table.insert(playersInGame, user2Cards )
+table.insert(playersInGame, user3Cards )
+table.insert(playersInGame, user4Cards )
+
 local user2backCards,user3backCards, user4backCards = {}, {}, {}
 local handCardIndex = 1
 local yourTurn      = false
-local turn          = 1
 local counter       = 1
-local hand          = 4
+local hand          = 1
 local cardWasAdded  = false
-local updateTimer
 local cutterSuit
-local firstCardSpot
 local deckIsEmpty = false
-local updateTimerCounter = 1000
+local UserToAddIndex 
+local UserToCutIndex
 math.randomseed(os.time())
 
 --------------------------------------------------------------------------------------------------
@@ -31,7 +35,6 @@ function cardTapped(event)
     cardWasAdded = true
     if (hand == 4 ) then
         local validateResult = ValidateMyCut(event.target)
-        print ("point 1: target is going to : " .. validateResult.x .. " " .. validateResult.y)
         if validateResult.canCut==true then
             AddMyCard(event.target, validateResult)
         else 
@@ -49,7 +52,6 @@ function cardTapped(event)
     return true
 end
 function cardDragged(event)
-    timer.pause(updateTimer)
     local self = event.target
     if event.phase == "began" then
         -- first we set the focus on the object
@@ -82,22 +84,13 @@ function cardDragged(event)
                     if validateResult.canCut==true then
                         AddMyCard(self, validateResult)
                         cardWasAdded = true
-                        timer.performWithDelay(800, function()
-                            timer.resume(updateTimer)
-                        end)
                         return true
                     else 
                         UpdateStatusBar("You Cant Cut With That!..")
                         transition.moveTo(self, {x=self.markX, y=self.markY, time = 300})
-                        timer.performWithDelay(500, function()
-                            timer.resume(updateTimer)
-                        end)
                     end
                 else 
                     transition.moveTo(self, {x=self.markX, y=self.markY, time = 300})
-                    timer.performWithDelay(500, function()
-                        timer.resume(updateTimer)
-                    end)
                 end
             end
             self.isFocus = false
@@ -179,7 +172,7 @@ function doneButtonPressed (event)
     end
 end
 function hand1Helper()
-        local didCut = CutCards(user2Cards)
+        local didCut = CutCards(getNextUserToCut())
         if didCut then 
             timer.performWithDelay(2000, function()
                 AddCards(user3Cards)
@@ -396,7 +389,7 @@ function GamePlay()
         timer.performWithDelay(2000, function() 
             AddCards(user2Cards)
                 timer.performWithDelay(2000, function()
-                        local didCut = CutCards(user3Cards) 
+                        local didCut = CutCards(getNextUserToCut()) 
                         if didCut == true then
                             timer.performWithDelay(2000, function () 
                                     AddCards(user4Cards) 
@@ -523,7 +516,6 @@ function AddCardsHelper(usersCards, cardsList)
                                     onComplete = function () AddCardsHelper(usersCards, cardsList) end})
 end
 function AddMyCard(card, validatedParam)
-    print ("point 2: target is going to : " .. validatedParam.x .. " " .. validatedParam.y)
     local cardValue = getCardValue(card)
     local cardAdded = false
     if(yourTurn and hand ~= 4 ) then
@@ -552,7 +544,6 @@ function AddMyCard(card, validatedParam)
             end
         end
     elseif hand == 4 then
-        print ("point 3: target is going to : " .. validatedParam.x .. " " .. validatedParam.y)
         cardAdded = true
         local nextSpot = {}
         nextSpot.x, nextSpot.y = validatedParam.x, validatedParam.y
@@ -561,7 +552,6 @@ function AddMyCard(card, validatedParam)
     return cardAdded
 end
 function addMyCardHelper (card, usersCards, spot)
-    print ("point 4: target is going to : " .. spot.x .. " " .. spot.y)
         local removedCardIndex
 
         card.isVisible = true
@@ -647,9 +637,6 @@ function CutCards(userCards)
 end
 function ClearTheBoard(cut, userCards)
     
-    if userCards == myCards then
-        --timer.resume(updateTimer)
-    end
     UpdateStatusBar("Clearing The Board...")
     local delay = 200
 
@@ -743,6 +730,38 @@ end
 ---------------------------------------HELPERS--------------------------------------------------
 function UpdateStatusBar(action)
     myUserArea.yourTurnText.text = action
+end
+function getNextUserToAdd()
+    
+end
+function getNextUserToCut()
+    print ("here")
+    local index = hand + 1
+    if index > table.maxn(playersInGame) then 
+        index = 1
+    end
+    local run = true
+    while run do
+        print ("got here? ")
+        if table.maxn(playersInGame[index]) == 0 and deckIsEmpty then
+            table.remove(playersInGame,index)
+            index = index + 1
+            if index > table.maxn(playersInGame) then 
+                index = 1
+            end
+        elseif index == hand then
+            --game over
+            print ("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+            print ("$$                                                                                   $$")
+            print ("$$  AT THIS POINT GAME IS OVER AND USER ".. hand .. " LOST.. REROUTE TO GAME OVER..  $$")
+            print ("$$                                                                                   $$")
+            print ("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+        else 
+            print ("NEXT USER TO CUT: ".. playersInGame[index].name)
+            return playersInGame[index]
+        end  
+    end
+    
 end
 function getCardValue (card)
     return card.value:sub(1, string.len(card.value) - 1)
@@ -893,9 +912,6 @@ function updateCardCounter(event)
         sceneGroup.numOfCardsDeck.text = table.maxn( cards ) - handCardIndex + 1 .. " /52"
 end
 timer.performWithDelay( 1000, updateCardCounter, 0 )
--- timer.performWithDelay(3000, function ()
---             updateTimer = timer.performWithDelay( updateTimerCounter, reArrangeMyCards, 0 )
---             end)
 function printAllTheCards()
             print ("---------My Cards--------")
             for i=1, table.maxn(myCards) do
