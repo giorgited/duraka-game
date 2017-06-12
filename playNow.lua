@@ -723,6 +723,18 @@ end
 function AssignCutterSuit()
     cutterSuit = getCardSuit(cards[52])
 end
+function UserHasEndedGame(userArea, userBackCards, userCards)
+    if deckIsEmpty then 
+        userArea.alpha = .2
+        for i=1,table.maxn(userBackCards) do 
+            userBackCards[i].alpha = .1
+        end
+        userArea.place.text = "User Finished.."
+
+        local ind = table.indexOf(playersInGame, userCards )
+        table.remove(playersInGame, ind)
+    end
+end
 ---------------------------------------HELPERS--------------------------------------------------
 function UpdateStatusBar(action)
     myUserArea.yourTurnText.text = action
@@ -904,12 +916,16 @@ function reArrangeMyCards()
 end
 function updateCardCounter(event)
         user2Area.numOfCardsUser2.text = table.maxn( user2Cards )
+        if table.maxn( user2Cards ) == 0 then UserHasEndedGame(user2Area, user2backCards, user2Cards) end
 
         user3Area.numOfCardsUser3.text = table.maxn( user3Cards )
-        
-        user4Area.numOfCardsUser4.text = table.maxn( user4Cards )
+        if table.maxn( user3Cards ) == 0 then UserHasEndedGame(user3Area, user3backCards, user3Cards) end
+
+        user4Area.numOfCardsUser4.text = table.maxn( user4Cards ) 
+        if table.maxn( user4Cards ) == 0 then UserHasEndedGame(user4Area, user4backCards, user4Cards) end
 
         sceneGroup.numOfCardsDeck.text = table.maxn( cards ) - handCardIndex + 1 .. " /52"
+        --if numOfCardsDeck.text == 0 then UserHasEndedGame(user2Area)  perhaps a table of game results???
 end
 timer.performWithDelay( 1000, updateCardCounter, 0 )
 function printAllTheCards()
