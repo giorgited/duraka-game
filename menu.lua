@@ -34,11 +34,12 @@ function scene:create( event )
 	local sceneGroup = self.view
 
 	-- display a background image
-	local background = display.newImageRect( "main-menu-background.png", display.actualContentWidth, display.actualContentHeight )
+	local background = display.newImageRect( "ace-backg.png", display.actualContentWidth, display.actualContentHeight )
 	background.anchorX = 0
 	background.anchorY = 0
 	background.x = 0 + display.screenOriginX
 	background.y = 0 + display.screenOriginY
+	background.alpha = .8
 	local centerX = display.contentCenterX
 	local centerY = display.contentCenterY
 	-- create/position logo/title image on upper-half of the screen
@@ -49,6 +50,7 @@ function scene:create( event )
 	local cardsImg = display.newImage("cards.png", centerX, 200)
 				cardsImg.width = 150
 				cardsImg.height = 130
+	cardsImg.isVisible = false
 	--how to play rectangle
 	local playBtn = display.newRoundedRect( 0, 0, 150,  50, 12 )
 				playBtn.strokeWidth = 3

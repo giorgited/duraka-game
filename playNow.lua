@@ -22,7 +22,7 @@ local user2backCards,user3backCards, user4backCards = {}, {}, {}
 local handCardIndex = 1
 local yourTurn      = false
 local counter       = 1
-local hand          = 1
+local hand          = 2
 local cutterSuit
 local deckIsEmpty = false
 local UserToAddIndex 
@@ -105,7 +105,6 @@ function doneButtonPressed (event)
         hand1Helper()
     elseif hand == 2 then
         if isAllCardsCut() then
-            print (json.prettify(playAreaGroupCards))
             ClearTheBoard(true)
             hand = hand + 1
             GamePlay()
@@ -125,7 +124,6 @@ function doneButtonPressed (event)
     end
 end
 function hand1Helper()
-    print (tostring(myCardWasAdded))
         if myCardWasAdded then 
             local didCut = CutCards(getNextUserToCut())
             if didCut then 
@@ -329,7 +327,8 @@ function dealCards(numberPerPerson)
 end
 
 function GamePlay()
-if hand > table.maxn(playAreaGroupCards) then hand = 1 end
+    print ("initially hand is: " .. hand)
+    if hand > table.maxn(playersInGame  ) then hand = 1 print (" hand was reset to 1: " .. hand) end
     if UserInGameValidation() then
         if hand ==1 then
             timer.performWithDelay(2000, function()
@@ -337,7 +336,6 @@ if hand > table.maxn(playAreaGroupCards) then hand = 1 end
                     else YourTurn("add") end
             end)
         elseif hand == 2 then
-            print ("game play 2")
         timer.performWithDelay(2000, function() 
             if AddCards(user2Cards) then
                 timer.performWithDelay(2000, function()
@@ -429,10 +427,11 @@ function AddCards(userCards)
     UpdateStatusBar(userCards.name .. " is Adding a Card !")
     local totalCut = 0
     for i=1, table.maxn(playAreaGroupCards) do
-        if playAreaGroupCards[i].hasBeenCut then 
-            totalCut = totalCut +1
+        if playAreaGroupCards[i].tracker==true then 
+            totalCut = totalCut +1   
         end
     end
+    print("total laid cards: " .. totalCut)
     if (totalCut <= 6) then 
         local added = false
         if (table.maxn(playAreaGroupCards) == 0) then
@@ -504,17 +503,31 @@ function AddCardsHelper(usersCards, cardsList)
     local emptySpot = findNextPlayAreaSpot()
     removedCardIndex = table.indexOf(usersCards, card)
 
-    table.remove(usersCards, removedCardIndex)
-    table.insert(playAreaGroupCards, card)
-    table.remove(cardsList, 1)
-    card.hasBeenCut = false
-    
+    local totalCut = 0
+    for i=1, table.maxn(playAreaGroupCards) do
+        if playAreaGroupCards[i].tracker==true then 
+            totalCut = totalCut +1   
+        end
+    end
+    print("TOTAL LAID CARDS: " .. totalCut)
+    if totalCut < 6 then
+        table.remove(usersCards, removedCardIndex)
+        table.insert(playAreaGroupCards, card)
+        table.remove(cardsList, 1)
+        card.hasBeenCut = false
+        card.tracker = true 
+        
 
-    local x = transition.moveTo(card, {x= emptySpot.moveToX, y=emptySpot.moveToY, time=400,
-                                    onStart = function ()
-                                        card.isVisible = true
-                                    end,
-                                    onComplete = function () AddCardsHelper(usersCards, cardsList) end})
+        local x = transition.moveTo(card, {x= emptySpot.moveToX, y=emptySpot.moveToY, time=400,
+                                        onStart = function ()
+                                            card.isVisible = true
+                                        end,
+                                        onComplete = function () 
+                                            AddCardsHelper(usersCards, cardsList) 
+                                        end})
+    else
+        UpdateStatusBar("Max Amount of Cards...")
+    end
 end
 function AddMyCard(card, validatedParam)
     local cardValue = getCardValue(card)
@@ -556,7 +569,7 @@ function addMyCardHelper (card, usersCards, spot)
         local removedCardIndex
 
         card.isVisible = true
-        if hand ~= 4 then card.hasBeenCut = false end
+        if hand ~= 4 then card.hasBeenCut = false card.tracker = true end
         removedCardIndex = table.indexOf(usersCards, card)
         table.remove(usersCards, removedCardIndex)
         table.insert(playAreaGroupCards, card)
