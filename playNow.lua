@@ -22,12 +22,14 @@ local user2backCards,user3backCards, user4backCards = {}, {}, {}
 local handCardIndex = 1
 local yourTurn      = false
 local counter       = 1
-local hand          = 2
+local hand          = 4
 local cutterSuit
 local deckIsEmpty = false
 local UserToAddIndex 
 local UserToCutIndex
 local myCardWasAdded = false
+local handMaxCards = false
+local totalHandCut = 0
 math.randomseed(os.time())
 
 --------------------------------------------------------------------------------------------------
@@ -41,11 +43,23 @@ function cardTapped(event)
         end
     else
         if yourTurn then
-            local added = AddMyCard(event.target)
-            if added then 
-                myCardWasAdded = true
-                myUserArea.doneButton:setEnabled(true)
-                myUserArea.doneButton:setFillColor(1)
+            if totalHandCut ~= true then
+                local added = AddMyCard(event.target)
+                if added then 
+                    myCardWasAdded = true
+                    myUserArea.doneButton:setEnabled(true)
+                    myUserArea.doneButton:setFillColor(1)
+                end
+            else
+                if isAllCardsCut() ~= true then
+                    if CutCards(getNextUserToCut()) then
+                        RotateToNextUserBy1()
+                    else
+                        RotateToNextUserBy2(getNextUserToCut())
+                    end
+                else
+                    RotateToNextUserBy1()
+                end                
             end
         end
     end
@@ -119,106 +133,102 @@ function doneButtonPressed (event)
             hand =  2
             GamePlay()
         else
-            GamePlay()
+            hand4Helper()
         end
     end
 end
 function hand1Helper()
-        if myCardWasAdded then 
-            local didCut = CutCards(getNextUserToCut())
-            if didCut then 
-                myCardWasAdded = false
-                YourTurn("add")
-            else
-                ClearTheBoard(false,user2Cards)
-                hand = hand + 2
-                GamePlay()
+        if CutCards( getNextUserToCut() ) then
+            if handMaxCards ~= true then
+                timer.performWithDelay(2000, function()
+                    AddCards(user3Cards)
+                    if handMaxCards  ~= true then
+                        timer.performWithDelay(2000, function()
+                            AddCards(user4Cards)  
+                            timer.performWithDelay(2000, function()
+                                if CutCards( getNextUserToCut() ) then
+                                    timer.performWithDelay(2000, function ()
+                                        if handMaxCards ~= true then
+                                            YourTurn("add")
+                                            print("why am i here?")
+                                        else
+                                            MaxCardsPlayedProcess()
+                                        end
+                                    end)
+                                else
+                                    RotateToNextUserBy2(getNextUserToCut())
+                                end
+                            end)          
+                        end)
+                    else
+                        MaxCardsPlayedProcess()
+                    end
+                end)
+            else 
+                MaxCardsPlayedProcess()
             end
         else
-            timer.performWithDelay(2000, function()
-                AddCards(user3Cards)
-                timer.performWithDelay(2000, function()
-                    AddCards(user4Cards)
-                    timer.performWithDelay(2000, function()
-                        if isAllCardsCut() then
-                            ClearTheBoard(true)
-                            hand = hand + 1 
-                            GamePlay()
-                        else
-                            if CutCards(user2Cards) then
-                                GamePlay()
-                            else
-                                ClearTheBoard(false, user2Cards)
-                                hand = hand + 2
-                                GamePlay()
-                            end
-                        end
-                    end)
-                end)
-            end)
+            RotateToNextUserBy2(getNextUserToCut())
         end
 end
 function hand2Helper()
     timer.performWithDelay(2000, function ()
         local didCut = CutCards(getNextUserToCut())
             if didCut then 
-                GamePlay()
-            else 
-                timer.performWithDelay(2000, function()
-                    ClearTheBoard(false, user3Cards)
-                    hand = hand + 2
+                if handMaxCards ~= true then 
                     GamePlay()
-                end)
+                else
+                    timer.performWithDelay(2000, RotateToNextUserBy1)
+                end
+            else 
+                timer.performWithDelay(2000, RotateToNextUserBy2)
             end
     end)
 end
 function hand3Helper()
     timer.performWithDelay(2000, function ()
-        AddCards(user2Cards)
-        timer.performWithDelay(2000, function()
-            if isAllCardsCut() then
-                ClearTheBoard(true)
-                hand = hand + 1
-                GamePlay()
-            else 
-                local didCut = CutCards(getNextUserToCut())
-                if didCut then 
-                    GamePlay()
-                else 
-                    timer.performWithDelay(2000, function()
-                        ClearTheBoard(false, user4Cards)
-                        hand = hand + 2
+        if handMaxCards ~= true then
+            AddCards(user2Cards)
+            timer.performWithDelay(2000, function()
+                if isAllCardsCut() then
+                    RotateToNextUserBy1()
+                else                     
+                    if CutCards(getNextUserToCut()) then 
                         GamePlay()
-                    end)
-                end 
-            end
-        end)     
+                    else 
+                        timer.performWithDelay(2000, function()
+                            RotateToNextUserBy2( getNextUserToCut() )
+                        end) 
+                    end 
+                end
+            end)     
+        else
+            timer.performWithDelay( 2000, MaxCardsPlayedProcess )
+        end
     end)
 end
 function hand4Helper()
     timer.performWithDelay(2000, function ()
-        AddCards(user2Cards)
-        timer.performWithDelay(2000, function () 
-                AddCards(user3Cards) 
+        if handMaxCards ~=  true then
+            AddCards(user2Cards)
+            if handMaxCards ~= true then
                 timer.performWithDelay(2000, function () 
-                    AddCards(user4Cards) 
-                    timer.performWithDelay(2000, function()
-                        local needsToBeCut = {}
-                        for i=1, table.maxn(playAreaGroupCards) do 
-                            if (playAreaGroupCards[i].hasBeenCut ~= true ) then
-                                table.insert(needsToBeCut, playAreaGroupCards[i])
-                            end
-                        end
-                        if table.maxn (needsToBeCut) == 0 then
-                            ClearTheBoard(true)
-                            hand = hand + 1
+                    AddCards(user3Cards) 
+                    if handMaxCards ~= true then
+                        timer.performWithDelay(2000, function () 
+                            AddCards(user4Cards) 
                             GamePlay()
-                        else
-                            YourTurn("cut")
-                        end
-                    end)
+                        end)
+                    else 
+                        MaxCardsPlayedProcess()
+                    end
                 end)
-        end)
+            else
+                MaxCardsPlayedProcess()
+            end
+        else 
+            MaxCardsPlayedProcess() 
+        end
     end)
 end
 local del = 500;
@@ -320,8 +330,8 @@ end
 function dealCards(numberPerPerson)
     dealMe(12)
     dealUser2(12)
-    dealUser3(12)
-    dealUser4(12)
+    dealUser3(0)
+    dealUser4(24)
     timer.performWithDelay(4000, reArrangeMyCards)
     yourTurn = true
 end
@@ -332,78 +342,82 @@ function GamePlay()
     if UserInGameValidation() then
         if hand ==1 then
             timer.performWithDelay(2000, function()
-                if table.maxn(playAreaGroupCards) == 0 then YourTurn("start")
-                    else YourTurn("add") end
-            end)
-        elseif hand == 2 then
-        timer.performWithDelay(2000, function() 
-            if AddCards(user2Cards) then
-                timer.performWithDelay(2000, function()
-                    if CutCards(getNextUserToCut()) then
-                        GamePlay()
-                    else
-                        timer.performWithDelay(2000, function()
-                            ClearTheBoard(false, user3Cards)
-                            hand = hand + 2
-                            GamePlay()
-                        end)
-                    end
-                end)
-            else
-                timer.performWithDelay(2000, function()
-                    AddCards(user4Cards)
-                    timer.performWithDelay(2000, function()
-                        YourTurn("add")
-                    end)
-                end)
-            end       
-        end)
-        elseif hand == 3 then
-            timer.performWithDelay(2000, function()
-                if AddCards(user3Cards) then
-                    timer.performWithDelay(2000, function()
-                        if CutCards(getNextUserToCut()) then
-                            GamePlay()
-                        else
-                            timer.performWithDelay(2000, function()
-                                ClearTheBoard(false, user4Cards)
-                                hand = hand + 2
-                                GamePlay()
-                            end)
-                        end
-                    end)
-                else
-                    timer.performWithDelay(2000, function()
-                        timer.performWithDelay(2000, function()
-                            YourTurn("add")
-                        end)
-                    end)
-                end       
-            end)
-        elseif hand == 4 then
-            timer.performWithDelay(2000, function() 
-                if AddCards(user4Cards) then
-                    timer.performWithDelay(2000, function()
-                        YourTurn("cut")
-                    end)
-                else
-                    timer.performWithDelay(2000, function()
-                        AddCards(user2Cards)
-                        timer.performWithDelay(2000, function()
-                            AddCards(user3Cards)
-                            timer.performWithDelay(2000, function()
-                                if isAllCardsCut() then 
-                                    ClearTheBoard(true)
-                                    hand = hand + 1
-                                    GamePlay()
-                                else
-                                    YourTurn("cut")
-                                end
-                            end)
-                        end)
-                    end)
+                if table.maxn(playAreaGroupCards) == 0 then 
+                    YourTurn("start")
                 end
             end)
+        elseif hand == 2 then
+            if handMaxCards ~= true then
+                timer.performWithDelay(2000, function()
+                    AddCards (user2Cards)
+                    timer.performWithDelay(2000, function ()
+                        if CutCards (getNextUserToCut()) then
+                            if handMaxCards ~= true then
+                                timer.performWithDelay(2000, function()
+                                    AddCards (user4Cards)
+                                    if handMaxCards ~= true then
+                                        timer.performWithDelay(1000, function()
+                                            YourTurn("add")
+                                        end)
+                                    else
+                                        MaxCardsPlayedProcess()
+                                    end  
+                                end)
+                            else
+                                MaxCardsPlayedProcess()
+                            end
+                        else
+                            RotateToNextUserBy2(getNextUserToCut())
+                        end
+                    end)
+                end)
+            else
+                MaxCardsPlayedProcess()
+            end
+        elseif hand == 3 then
+            if handMaxCards ~= true then
+                timer.performWithDelay(2000, function()
+                    AddCards (user3Cards)
+                    timer.performWithDelay(2000, function ()
+                        if CutCards (getNextUserToCut()) then
+                            timer.performWithDelay(2000, function()
+                                if handMaxCards ~= true then
+                                    YourTurn("add")                             
+                                else
+                                    MaxCardsPlayedProcess()
+                                end
+                            end)
+                        else                                                   
+                            timer.performWithDelay( 2000, RotateToNextUserBy2(getNextUserToCut()) )
+                        end
+                    end)
+                end)
+            else
+                MaxCardsPlayedProcess()               
+            end
+        elseif hand == 4 then
+            if handMaxCards ~= true then 
+                timer.performWithDelay(2000, function() 
+                    AddCards(user4Cards)
+                    timer.performWithDelay(2000, function()
+                        local needsToBeCut = {}
+                        for i=1, table.maxn(playAreaGroupCards) do 
+                            if (playAreaGroupCards[i].hasBeenCut ~= true ) then
+                                table.insert(needsToBeCut, playAreaGroupCards[i])
+                            end
+                        end
+                        if table.maxn (needsToBeCut) == 0 then
+                            ClearTheBoard(true)
+                            hand = hand + 1
+                            GamePlay()
+                        else
+                            YourTurn("cut")
+                        end
+                    end)                    
+                end)
+            else
+                MaxCardsPlayedProcess()
+            end
         end
     else
         hand = hand + 1
@@ -411,6 +425,7 @@ function GamePlay()
         GamePlay()
     end
 end
+
 function YourTurn(request)
     myUserArea.doneButton:setFillColor( 1 )
     yourTurn = true
@@ -425,76 +440,61 @@ end
 function AddCards(userCards)
     if UserInGameValidation == false then return end
     UpdateStatusBar(userCards.name .. " is Adding a Card !")
-    local totalCut = 0
-    for i=1, table.maxn(playAreaGroupCards) do
-        if playAreaGroupCards[i].tracker==true then 
-            totalCut = totalCut +1   
-        end
-    end
-    print("total laid cards: " .. totalCut)
-    if (totalCut <= 6) then 
-        local added = false
-        if (table.maxn(playAreaGroupCards) == 0) then
-            local cardsList = {}
-            for i=1, table.maxn(userCards) do
-                local cardSuit = getCardSuit(userCards[i])
-                if deckIsEmpty ~= true then
-                    if cardSuit ~= cutterSuit then
-                        local value = getCardValue (userCards[i])
-                        table.insert(cardsList, tonumber(value))
-                    end
-                else
+
+    if (table.maxn(playAreaGroupCards) == 0) then
+        local cardsList = {}
+        for i=1, table.maxn(userCards) do
+            local cardSuit = getCardSuit(userCards[i])
+            if deckIsEmpty ~= true then
+                if cardSuit ~= cutterSuit then
                     local value = getCardValue (userCards[i])
                     table.insert(cardsList, tonumber(value))
                 end
+            else
+                local value = getCardValue (userCards[i])
+                table.insert(cardsList, tonumber(value))
             end
-            table.sort(cardsList)
-            local addCards = {}
-            
-            for i=1, table.maxn(userCards) do
-                local cardSuit = getCardSuit(userCards[i])
-                local carValue = tonumber(getCardValue(userCards[i]))
-                if deckIsEmpty ~= true then
-                    if (cardSuit ~= cutterSuit) then
-                        if (carValue == cardsList[1]) then
-                            table.insert(addCards, userCards[i] )
-                            added = true
-                        end
-                    end
-                else
-                    if (carValue == cardsList[1]) then
-                            table.insert(addCards, userCards[i] )
-                            added = true
-                    end
-                end
-            end
-            AddCardsHelper(userCards, addCards)
-            if added then return true end
-        else
-            local addCardsList = {}
-            local canAdd = false
-            local temp = {}
-            for i=1, table.maxn(userCards) do
-                table.insert(temp, userCards[i])
-            end
-
-            for x=1, table.maxn(playAreaGroupCards) do
-                local size = table.maxn(temp)
-                for i = 1, size do
-                    if i >= size then break end
-                    if getCardValue(temp[i]) == getCardValue(playAreaGroupCards[x]) then
-                        if (getCardSuit(temp[i]) ~= cutterSuit) then
-                            table.insert(addCardsList, temp[i])
-                            table.remove(temp,i)
-                            size = size - 1
-                            added = true
-                        end
-                    end 
-                end
-            end
-            AddCardsHelper(userCards, addCardsList)
-            if added then return true end
         end
+        table.sort(cardsList)
+        local addCards = {}
+        
+        for i=1, table.maxn(userCards) do
+            local cardSuit = getCardSuit(userCards[i])
+            local carValue = tonumber(getCardValue(userCards[i]))
+            if deckIsEmpty ~= true then
+                if (cardSuit ~= cutterSuit) then
+                    if (carValue == cardsList[1]) then
+                        table.insert(addCards, userCards[i] )
+                    end
+                end
+            else
+                if (carValue == cardsList[1]) then
+                        table.insert(addCards, userCards[i] )
+                end
+            end
+        end
+        AddCardsHelper(userCards, addCards)
+    else
+        local addCardsList = {}
+        local temp = {}
+        for i=1, table.maxn(userCards) do
+            table.insert(temp, userCards[i])
+        end
+
+        for x=1, table.maxn(playAreaGroupCards) do
+            local size = table.maxn(temp)
+            for i = 1, size do
+                if i >= size then break end
+                if getCardValue(temp[i]) == getCardValue(playAreaGroupCards[x]) then
+                    if (getCardSuit(temp[i]) ~= cutterSuit) then
+                        table.insert(addCardsList, temp[i])
+                        table.remove(temp,i)
+                        size = size - 1
+                    end
+                end 
+            end
+        end
+        AddCardsHelper(userCards, addCardsList)
     end
 end
 function AddCardsHelper(usersCards, cardsList)
@@ -503,19 +503,12 @@ function AddCardsHelper(usersCards, cardsList)
     local emptySpot = findNextPlayAreaSpot()
     removedCardIndex = table.indexOf(usersCards, card)
 
-    local totalCut = 0
-    for i=1, table.maxn(playAreaGroupCards) do
-        if playAreaGroupCards[i].tracker==true then 
-            totalCut = totalCut +1   
-        end
-    end
-    print("TOTAL LAID CARDS: " .. totalCut)
-    if totalCut < 6 then
+    if totalHandCut < 6 and totalHandCut < table.maxn(getNextUserToCut()) then
+        totalHandCut = totalHandCut + 1
         table.remove(usersCards, removedCardIndex)
         table.insert(playAreaGroupCards, card)
         table.remove(cardsList, 1)
         card.hasBeenCut = false
-        card.tracker = true 
         
 
         local x = transition.moveTo(card, {x= emptySpot.moveToX, y=emptySpot.moveToY, time=400,
@@ -526,6 +519,7 @@ function AddCardsHelper(usersCards, cardsList)
                                             AddCardsHelper(usersCards, cardsList) 
                                         end})
     else
+        handMaxCards = true
         UpdateStatusBar("Max Amount of Cards...")
     end
 end
@@ -569,7 +563,10 @@ function addMyCardHelper (card, usersCards, spot)
         local removedCardIndex
 
         card.isVisible = true
-        if hand ~= 4 then card.hasBeenCut = false card.tracker = true end
+        if hand ~= 4 then 
+            card.hasBeenCut = false 
+            totalHandCut = totalHandCut + 1
+        end
         removedCardIndex = table.indexOf(usersCards, card)
         table.remove(usersCards, removedCardIndex)
         table.insert(playAreaGroupCards, card)
@@ -643,6 +640,8 @@ function CutCards(userCards)
         end
     end
     end
+    if table.maxn(userCards) == 0 then handMaxCards = true end 
+
     if (numberOfCuts == table.maxn( playAreaGroupCards )) then
         UpdateStatusBar(userCards.name .. " Cut The Cards !")
         return true
@@ -652,7 +651,9 @@ function CutCards(userCards)
     end
 end
 function ClearTheBoard(cut, userCards)
-    
+    handMaxCards = false
+    totalHandCut = 0
+
     UpdateStatusBar("Clearing The Board...")
     local delay = 200
 
@@ -679,6 +680,7 @@ function ClearTheBoard(cut, userCards)
         end
     end
     timer.performWithDelay(1000,function () fillUpUsers() end )
+    
 end
 function ValidateMyCut(card)
 
@@ -776,6 +778,30 @@ function UserInGameValidation()
         end
     end
     return userInGame
+end
+function RotateToNextUserBy1()
+    ClearTheBoard(true)
+    hand = hand + 1
+    GamePlay()
+end
+function RotateToNextUserBy2(userCards)
+    ClearTheBoard(false, userCards)
+    hand = hand + 1
+    GamePlay()
+end
+function MaxCardsPlayedProcess()
+    timer.performWithDelay(2000, function()
+        if isAllCardsCut() ~= true  then
+            if CutCards(getNextUserToCut()) then
+                timer.performWithDelay( 1000, RotateToNextUserBy1 )
+            else
+                timer.performWithDelay( 1000, RotateToNextUserBy2(getNextUserToCut()) )
+            end
+        else
+            RotateToNextUserBy1() 
+        end
+    end)
+    
 end
 ---------------------------------------HELPERS--------------------------------------------------
 function UpdateStatusBar(action)
@@ -1011,7 +1037,7 @@ function hasCollided( obj1, obj2 )
 end
 -------------------------------Scene Create/Show/Destroy-----------------------------------------
 function scene:create( event )
-	sceneGroup = self.view
+    sceneGroup = self.view
 
     createAllObjects(sceneGroup)
 
@@ -1044,39 +1070,39 @@ function scene:create( event )
         playArea.y = centerY
 
     playAreaGroup.playArea = playArea
-	
+    
     sceneGroup:insert(playArea)
 end
 function scene:show( event )
-	local sceneGroup = self.view
-	local phase = event.phase
+    local sceneGroup = self.view
+    local phase = event.phase
 
-	if phase == "will" then
-		-- Called when the scene is still off screen and is about to move on screen
-	elseif phase == "did" then
-		-- Called when the scene is now on screen
-		--
-		-- INSERT code here to make the scene come alive
-		-- e.g. start timers, begin animation, play audio, etc.
-		--physics.start()
+    if phase == "will" then
+        -- Called when the scene is still off screen and is about to move on screen
+    elseif phase == "did" then
+        -- Called when the scene is now on screen
+        --
+        -- INSERT code here to make the scene come alive
+        -- e.g. start timers, begin animation, play audio, etc.
+        --physics.start()
 
     dealCards(6)
     printAllTheCards()
     GamePlay()
-	end
+    end
 end
 function scene:destroy( event )
-	local sceneGroup = self.view
+    local sceneGroup = self.view
 
-	-- Called prior to the removal of scene's "view" (sceneGroup)
-	--
-	-- INSERT code here to cleanup the scene
-	-- e.g. remove display objects, remove touch listeners, save state, etc.
+    -- Called prior to the removal of scene's "view" (sceneGroup)
+    --
+    -- INSERT code here to cleanup the scene
+    -- e.g. remove display objects, remove touch listeners, save state, etc.
 
-	if playBtn then
-		playBtn:removeSelf()	-- widgets must be manually removed
-		playBtn = nil
-	end
+    if playBtn then
+        playBtn:removeSelf()    -- widgets must be manually removed
+        playBtn = nil
+    end
 end
 
 ---------------------------------------------------------------------------------
