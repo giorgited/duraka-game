@@ -116,12 +116,14 @@ function doneButtonPressed (event)
     myUserArea.doneButton:setFillColor( 0 )
 
     if hand == 1 then
-        hand1Helper()
+        if isAllCardsCut() then
+            RotateToNextUserBy1()
+        else
+            hand1Helper()
+        end
     elseif hand == 2 then
         if isAllCardsCut() then
-            ClearTheBoard(true)
-            hand = hand + 1
-            GamePlay()
+           RotateToNextUserBy1()
         else
             hand2Helper()
         end
@@ -150,7 +152,6 @@ function hand1Helper()
                                     timer.performWithDelay(2000, function ()
                                         if handMaxCards ~= true then
                                             YourTurn("add")
-                                            print("why am i here?")
                                         else
                                             MaxCardsPlayedProcess()
                                         end
@@ -328,17 +329,17 @@ function dealUser4(numberOfCards)
      end
 end
 function dealCards(numberPerPerson)
-    dealMe(12)
-    dealUser2(12)
+    dealMe(17)
+    dealUser2(17)
     dealUser3(0)
-    dealUser4(24)
+    dealUser4(18)
     timer.performWithDelay(4000, reArrangeMyCards)
     yourTurn = true
 end
 
 function GamePlay()
-    print ("initially hand is: " .. hand)
-    if hand > table.maxn(playersInGame  ) then hand = 1 print (" hand was reset to 1: " .. hand) end
+    print("HAND " .. hand)
+    if hand > 4 then hand = 1  end
     if UserInGameValidation() then
         if hand ==1 then
             timer.performWithDelay(2000, function()
@@ -421,7 +422,6 @@ function GamePlay()
         end
     else
         hand = hand + 1
-        --print ("THIS USER IS OUT OF GAME")
         GamePlay()
     end
 end
@@ -438,7 +438,7 @@ function YourTurn(request)
     end
 end
 function AddCards(userCards)
-    if UserInGameValidation == false then return end
+    if getNextUserToCut().name == userCards.name then return end
     UpdateStatusBar(userCards.name .. " is Adding a Card !")
 
     if (table.maxn(playAreaGroupCards) == 0) then
@@ -651,6 +651,7 @@ function CutCards(userCards)
     end
 end
 function ClearTheBoard(cut, userCards)
+    updateCardCounter()
     handMaxCards = false
     totalHandCut = 0
 
@@ -754,7 +755,9 @@ function UserHasEndedGame(userArea, userBackCards, userCards)
         userArea.place.text = "User Finished.."
 
         local ind = table.indexOf(playersInGame, userCards )
+        print("REMOVING....." .. json.prettify(playersInGame))
         table.remove(playersInGame, ind)
+        print("REMOVING....." .. json.prettify(playersInGame))
     end
 end
 function UserInGameValidation()
@@ -773,11 +776,21 @@ function UserInGameValidation()
         end
     elseif hand == 4 then
         for i=1, table.maxn(playersInGame) do 
-            print (playersInGame[i].name)
             if playersInGame[i].name == "User 4" then userInGame = true end
+            print ("in hand4 ... " .. tostring(playersInGame[i].name == "User 4") .. playersInGame[i].name)
         end
     end
     return userInGame
+end
+function UserAddValidation(userCards)
+    for i=1, table.maxn(playersInGame) do
+        if playersInGame[i].name == userCards.name then 
+            userInGame = true 
+        end
+    end
+    if getNextUserToCut() ~= userCards and userInGame then
+        return true
+    end
 end
 function RotateToNextUserBy1()
     ClearTheBoard(true)
@@ -810,8 +823,16 @@ end
 function getNextUserToCut()
     local index = hand + 1
     if index > table.maxn(playersInGame) then index = 1 end
+    print("ALRIGHT SOOO-------->>>>   ".. index .. table.maxn(playersInGame))
+    local tmp = ""
+    if hand == 2 then 
+        tmp= user2Cards.name 
+    elseif hand ==3 then
+     tmp=user3Cards.name
+      elseif hand ==4 then
+       tmp=user3Cards.name else tmp = myCards.name end
 
-    if playersInGame[index].name == playersInGame[hand].name then
+    if playersInGame[index].name == tmp then
         --game over
         print ("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
         print ("$$                                                                                   $$")
@@ -821,6 +842,15 @@ function getNextUserToCut()
     else
         return playersInGame[index]
     end    
+end
+function isCertainUserInGame(userCards)
+    local userInGame = false
+    for i=1, table.maxn(playersInGame) do
+        if playersInGame[i].name == userCards.name then 
+            userInGame = true 
+        end
+    end
+    return userInGame
 end
 function isAllCardsCut()
     for i=1, table.maxn(playAreaGroupCards) do 
@@ -969,20 +999,26 @@ function reArrangeMyCards()
         end
     end
 end
-function updateCardCounter(event)
-        user2Area.numOfCardsUser2.text = table.maxn( user2Cards )
-        if table.maxn( user2Cards ) == 0 then UserHasEndedGame(user2Area, user2backCards, user2Cards) end
+function updateCardCounter()
+        if isCertainUserInGame(user2Cards) then
+            user2Area.numOfCardsUser2.text = table.maxn( user2Cards )
+            if table.maxn( user2Cards ) == 0 then UserHasEndedGame(user2Area, user2backCards, user2Cards) end
+        end
+        
+        if isCertainUserInGame(user3Cards) then
+            user3Area.numOfCardsUser3.text = table.maxn( user3Cards )
+            if table.maxn( user3Cards ) == 0 then UserHasEndedGame(user3Area, user3backCards, user3Cards) end
+        end
 
-        user3Area.numOfCardsUser3.text = table.maxn( user3Cards )
-        if table.maxn( user3Cards ) == 0 then UserHasEndedGame(user3Area, user3backCards, user3Cards) end
-
-        user4Area.numOfCardsUser4.text = table.maxn( user4Cards ) 
-        if table.maxn( user4Cards ) == 0 then UserHasEndedGame(user4Area, user4backCards, user4Cards) end
+        if isCertainUserInGame (user4Cards) then
+            user4Area.numOfCardsUser4.text = table.maxn( user4Cards ) 
+            if table.maxn( user4Cards ) == 0 then UserHasEndedGame(user4Area, user4backCards, user4Cards) end
+        end
 
         sceneGroup.numOfCardsDeck.text = table.maxn( cards ) - handCardIndex + 1 .. " /52"
         --if numOfCardsDeck.text == 0 then UserHasEndedGame(user2Area)  perhaps a table of game results???
 end
-timer.performWithDelay( 1000, updateCardCounter, 0 )
+--timer.performWithDelay( 1, updateCardCounter, 0 )
 function printAllTheCards()
             print ("---------My Cards--------")
             for i=1, table.maxn(myCards) do
