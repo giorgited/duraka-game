@@ -209,16 +209,22 @@ function hand3Helper()
     end)
 end
 function hand4Helper()
-    timer.performWithDelay(2000, function ()
+    timer.performWithDelay(1400, function ()
         if handMaxCards ~=  true then
             AddCards(user2Cards)
             if handMaxCards ~= true then
-                timer.performWithDelay(2000, function () 
+                timer.performWithDelay(1400, function () 
                     AddCards(user3Cards) 
                     if handMaxCards ~= true then
-                        timer.performWithDelay(2000, function () 
+                        timer.performWithDelay(1400, function () 
                             AddCards(user4Cards) 
-                            GamePlay()
+                            timer.performWithDelay(1400, function()
+                                if isAllCardsCut() then
+                                    RotateToNextUserBy1()
+                                else
+                                    GamePlay()
+                                end
+                            end)
                         end)
                     else 
                         MaxCardsPlayedProcess()
@@ -398,9 +404,9 @@ function GamePlay()
             end
         elseif hand == 4 then
             if handMaxCards ~= true then 
-                timer.performWithDelay(2000, function() 
+                timer.performWithDelay(1400, function() 
                     AddCards(user4Cards)
-                    timer.performWithDelay(2000, function()
+                    timer.performWithDelay(1400, function()
                         local needsToBeCut = {}
                         for i=1, table.maxn(playAreaGroupCards) do 
                             if (playAreaGroupCards[i].hasBeenCut ~= true ) then
@@ -799,7 +805,7 @@ function RotateToNextUserBy1()
 end
 function RotateToNextUserBy2(userCards)
     ClearTheBoard(false, userCards)
-    hand = hand + 1
+    hand = hand + 2
     GamePlay()
 end
 function MaxCardsPlayedProcess()
