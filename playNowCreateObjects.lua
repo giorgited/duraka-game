@@ -37,7 +37,9 @@ function createAllObjects(sceneGroup)
     background.fill.effect.intensity = -.3
 
     sceneGroup:insert( background )
+    local cutterSuit = display.newText( "Cutter Suit", maxX - 32, zeroY + sceneGroup.cardHeight/2 - 10, native.systemFontBold, 12)
 
+    sceneGroup:insert(cutterSuit)
     createSceneGrid(sceneGroup)
     createMyUserObjects(sceneGroup)
     createUser2Objects(sceneGroup)
@@ -45,7 +47,7 @@ function createAllObjects(sceneGroup)
     createUser4Objects(sceneGroup)
     createCardObjects(sceneGroup)
 
-    local cutterSuit = display.newText( "Cutter Suit", maxX - 32, zeroY + sceneGroup.cardHeight/2 - 10, native.systemFontBold, 12)
+    
 end
 function storeSharedVariables(sceneGroup)
     sceneGroup.cardWidth = (maxX - 30)/6
