@@ -18,6 +18,12 @@ table.insert(playersInGame, user2Cards )
 table.insert(playersInGame, user3Cards )
 table.insert(playersInGame, user4Cards )
 
+local users = {}
+table.insert(users, myCards )
+table.insert(users, user2Cards )
+table.insert(users, user3Cards )
+table.insert(users, user4Cards )
+
 local user2backCards,user3backCards, user4backCards = {}, {}, {}
 local handCardIndex = 1
 local yourTurn      = false
@@ -344,93 +350,125 @@ function dealCards(numberPerPerson)
 end
 
 function GamePlay()
-    print("HAND " .. hand)
-    if hand > 4 then hand = 1  end
-    if UserInGameValidation() then
-        if hand ==1 then
-            timer.performWithDelay(2000, function()
-                if table.maxn(playAreaGroupCards) == 0 then 
-                    YourTurn("start")
-                end
-            end)
-        elseif hand == 2 then
-            if handMaxCards ~= true then
-                timer.performWithDelay(2000, function()
-                    AddCards (user2Cards)
-                    timer.performWithDelay(2000, function ()
-                        if CutCards (getNextUserToCut()) then
-                            if handMaxCards ~= true then
-                                timer.performWithDelay(2000, function()
-                                    AddCards (user4Cards)
-                                    if handMaxCards ~= true then
-                                        timer.performWithDelay(1000, function()
-                                            YourTurn("add")
-                                        end)
-                                    else
-                                        MaxCardsPlayedProcess()
-                                    end  
-                                end)
-                            else
-                                MaxCardsPlayedProcess()
-                            end
-                        else
-                            RotateToNextUserBy2(getNextUserToCut())
-                        end
-                    end)
-                end)
-            else
-                MaxCardsPlayedProcess()
+
+    local gameRunning = false
+    local handOver = false
+    local handStarter = 1
+
+    while gameRunning do
+
+        while handOver ~= true do
+            AddCards(playersInGame[handStarter])
+            CutCards(playersInGame[handStarter+1])
+            if playersInGame[handStarter + 2] then
+                AddCards(playersInGame[handStarter + 2])
             end
-        elseif hand == 3 then
-            if handMaxCards ~= true then
-                timer.performWithDelay(2000, function()
-                    AddCards (user3Cards)
-                    timer.performWithDelay(2000, function ()
-                        if CutCards (getNextUserToCut()) then
-                            timer.performWithDelay(2000, function()
-                                if handMaxCards ~= true then
-                                    YourTurn("add")                             
-                                else
-                                    MaxCardsPlayedProcess()
-                                end
-                            end)
-                        else                                                   
-                            timer.performWithDelay( 2000, RotateToNextUserBy2(getNextUserToCut()) )
-                        end
-                    end)
-                end)
-            else
-                MaxCardsPlayedProcess()               
+
+            if playersInGame[handStarter + 3] then
+                AddCards(playersInGame[handStarter + 3])
             end
-        elseif hand == 4 then
-            if handMaxCards ~= true then 
-                timer.performWithDelay(1400, function() 
-                    AddCards(user4Cards)
-                    timer.performWithDelay(1400, function()
-                        local needsToBeCut = {}
-                        for i=1, table.maxn(playAreaGroupCards) do 
-                            if (playAreaGroupCards[i].hasBeenCut ~= true ) then
-                                table.insert(needsToBeCut, playAreaGroupCards[i])
-                            end
-                        end
-                        if table.maxn (needsToBeCut) == 0 then
-                            ClearTheBoard(true)
-                            hand = hand + 1
-                            GamePlay()
-                        else
-                            YourTurn("cut")
-                        end
-                    end)                    
-                end)
+            if isAllCardsCut() then 
+
             else
-                MaxCardsPlayedProcess()
+                
             end
         end
-    else
-        hand = hand + 1
-        GamePlay()
+
     end
 end
+
+
+
+
+
+-- function GamePlay()
+--     print("HAND " .. hand)
+--     if hand > 4 then hand = 1  end
+--     if UserInGameValidation() then
+--         if hand ==1 then
+--             timer.performWithDelay(2000, function()
+--                 if table.maxn(playAreaGroupCards) == 0 then 
+--                     YourTurn("start")
+--                 end
+--             end)
+--         elseif hand == 2 then
+--             if handMaxCards ~= true then
+--                 timer.performWithDelay(2000, function()
+--                     AddCards (user2Cards)
+--                     timer.performWithDelay(2000, function ()
+--                         if CutCards (getNextUserToCut()) then
+--                             if handMaxCards ~= true then
+--                                 timer.performWithDelay(2000, function()
+--                                     AddCards (user4Cards)
+--                                     if handMaxCards ~= true then
+--                                         timer.performWithDelay(1000, function()
+--                                             YourTurn("add")
+--                                         end)
+--                                     else
+--                                         MaxCardsPlayedProcess()
+--                                     end  
+--                                 end)
+--                             else
+--                                 MaxCardsPlayedProcess()
+--                             end
+--                         else
+--                             RotateToNextUserBy2(getNextUserToCut())
+--                         end
+--                     end)
+--                 end)
+--             else
+--                 MaxCardsPlayedProcess()
+--             end
+--         elseif hand == 3 then
+--             if handMaxCards ~= true then
+--                 timer.performWithDelay(2000, function()
+--                     AddCards (user3Cards)
+--                     timer.performWithDelay(2000, function ()
+--                         if CutCards (getNextUserToCut()) then
+--                             timer.performWithDelay(2000, function()
+--                                 if handMaxCards ~= true then
+--                                     YourTurn("add")                             
+--                                 else
+--                                     MaxCardsPlayedProcess()
+--                                 end
+--                             end)
+--                         else                                                   
+--                             timer.performWithDelay( 2000, RotateToNextUserBy2(getNextUserToCut()) )
+--                         end
+--                     end)
+--                 end)
+--             else
+--                 MaxCardsPlayedProcess()               
+--             end
+--         elseif hand == 4 then
+--             if handMaxCards ~= true then 
+--                 timer.performWithDelay(1400, function() 
+--                     AddCards(user4Cards)
+--                     timer.performWithDelay(1400, function()
+--                         local needsToBeCut = {}
+--                         for i=1, table.maxn(playAreaGroupCards) do 
+--                             if (playAreaGroupCards[i].hasBeenCut ~= true ) then
+--                                 table.insert(needsToBeCut, playAreaGroupCards[i])
+--                             end
+--                         end
+--                         if table.maxn (needsToBeCut) == 0 then
+--                             ClearTheBoard(true)
+--                             hand = hand + 1
+--                             GamePlay()
+--                         else
+--                             YourTurn("cut")
+--                         end
+--                     end)                    
+--                 end)
+--             else
+--                 MaxCardsPlayedProcess()
+--             end
+--         end
+--     else
+--         hand = hand + 1
+--         GamePlay()
+--     end
+-- end
 
 function YourTurn(request)
     myUserArea.doneButton:setFillColor( 1 )
