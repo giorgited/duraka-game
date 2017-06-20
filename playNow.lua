@@ -357,22 +357,34 @@ function GamePlay()
 
     while gameRunning do
 
-        while handOver ~= true do
-            AddCards(playersInGame[handStarter])
-            CutCards(playersInGame[handStarter+1])
-            if playersInGame[handStarter + 2] then
-                AddCards(playersInGame[handStarter + 2])
-            end
+        handOver = false
 
-            if playersInGame[handStarter + 3] then
-                AddCards(playersInGame[handStarter + 3])
-            end
-            if isAllCardsCut() then 
-
-            else
-                
-            end
+        if handStarter > table.maxn(playersInGame) then
+            handStarter = 1
         end
+
+        while handOver ~= true do
+            timer.performWithDelay(2000, function()
+                AddCards(playersInGame[handStarter])
+                CutCards(playersInGame[handStarter+1])
+                if playersInGame[handStarter + 2] then
+                    AddCards(playersInGame[handStarter + 2])
+                end
+
+                if playersInGame[handStarter + 3] then
+                    AddCards(playersInGame[handStarter + 3])
+                end
+                if isAllCardsCut() then 
+
+                else
+                    ClearTheBoard(false)
+                    handOver = true
+
+                end
+            end)
+        end
+
+        handStarter = handStarter  + 1
 
     end
 end
