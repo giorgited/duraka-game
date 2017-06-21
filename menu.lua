@@ -34,7 +34,7 @@ function scene:create( event )
 	local sceneGroup = self.view
 
 	-- display a background image
-	local background = display.newImageRect( "ace-backg.png", display.actualContentWidth, display.actualContentHeight )
+	local background = display.newImageRect( "images/ace-backg.png", display.actualContentWidth, display.actualContentHeight )
 	background.anchorX = 0
 	background.anchorY = 0
 	background.x = 0 + display.screenOriginX
@@ -47,7 +47,7 @@ function scene:create( event )
 	titleLogo:setFillColor( 0, 0, 0 )
 
 
-	local cardsImg = display.newImage("cards.png", centerX, 200)
+	local cardsImg = display.newImage("images/cards.png", centerX, 200)
 				cardsImg.width = 150
 				cardsImg.height = 130
 	cardsImg.isVisible = false

@@ -28,7 +28,7 @@ local backCards = {}
 
 function createAllObjects(sceneGroup)
     storeSharedVariables(sceneGroup)
-    local background = display.newImageRect( "main-menu-background.png", display.actualContentWidth, display.actualContentHeight )
+    local background = display.newImageRect( "images/main-menu-background.png", display.actualContentWidth, display.actualContentHeight )
     background.anchorX = 0
     background.anchorY = 0
     background.x = 0 + display.screenOriginX
@@ -110,7 +110,7 @@ function createMyUserObjects(sceneGroup)
             y = myUserCards.y + (1/2)*myUserCards.height + 18, 
             width = maxX * .25, 
             height = maxY * .04, 
-            defaultFile = "doneButton.png",
+            defaultFile = "images/doneButton.png",
             label= "done",
             labelColor = { default={ 1, 1, 1, .6 }, over={ 0, 0, 0, 0.5 }},
             onPress = doneButtonPressed,
@@ -225,13 +225,13 @@ function createCardObjects(sceneGroup)
    sceneGroup.cards ={}
 
     for i = 1, 52 do
-        local cardFront = display.newImage("DeckOfCards/".. deckOfCards[i].."-min.jpg", zeroX + sceneGroup.cardWidth/2, zeroY + sceneGroup.cardHeight/2)
+        local cardFront = display.newImage("images/DeckOfCards/".. deckOfCards[i].."-min.jpg", zeroX + sceneGroup.cardWidth/2, zeroY + sceneGroup.cardHeight/2)
             cardFront.width= sceneGroup.cardWidth
             cardFront.height = sceneGroup.cardHeight
             cardFront.isVisible = false
             cardFront.value = deckOfCards[i]
         sceneGroup.cards[i] = cardFront
-        local cardBack = display.newImage("DeckOfCards/faceDown-min.jpg", zeroX + sceneGroup.cardWidth * .8/2, zeroY + sceneGroup.cardHeight * .8/2)
+        local cardBack = display.newImage("images/DeckOfCards/faceDown-min.jpg", zeroX + sceneGroup.cardWidth * .8/2, zeroY + sceneGroup.cardHeight * .8/2)
             cardBack.width= sceneGroup.cardWidth * .8
             cardBack.height = sceneGroup.cardHeight * .8
             cardBack.x = zeroX + sceneGroup.cardWidth/2

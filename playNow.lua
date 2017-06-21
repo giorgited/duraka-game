@@ -186,10 +186,10 @@ function hand2Helper()
                 if handMaxCards ~= true then 
                     GamePlay()
                 else
-                    timer.performWithDelay(2000, RotateToNextUserBy1)
+                    timer.performWithDelay(1400, RotateToNextUserBy1)
                 end
             else 
-                timer.performWithDelay(2000, RotateToNextUserBy2)
+                timer.performWithDelay(1400, RotateToNextUserBy2)
             end    
     else
         ClearTheBoard(true)
@@ -198,21 +198,21 @@ end
 function hand3Helper()
     if handMaxCards ~= true then
         AddCards(user2Cards)
-        timer.performWithDelay(2000, function()
+        timer.performWithDelay(1400, function()
             if isAllCardsCut() then
                 RotateToNextUserBy1()
             else                     
                 if CutCards(getNextUserToCut()) then 
                     GamePlay()
                 else 
-                    timer.performWithDelay(2000, function()
+                    timer.performWithDelay(1400, function()
                         RotateToNextUserBy2( getNextUserToCut() )
                     end) 
                 end 
             end
         end)     
     else
-        timer.performWithDelay( 2000, MaxCardsPlayedProcess )
+        timer.performWithDelay( 1400, MaxCardsPlayedProcess )
     end
 end
 function hand4Helper()
@@ -342,13 +342,13 @@ function dealUser4(numberOfCards)
      end
 end
 function dealCards(numberPerPerson)
-    dealMe(10)
+    dealMe(6)
     updateCardCounter()
-    dealUser2(15)
+    dealUser2(6)
     updateCardCounter()
-    dealUser3(12)
+    dealUser3(6)
     updateCardCounter()
-    dealUser4(15)
+    dealUser4(6)
     updateCardCounter()
     timer.performWithDelay(4000, reArrangeMyCards)
     yourTurn = true
@@ -367,19 +367,19 @@ function GamePlay()
         if hand > 4 then hand = 1  end
         if UserInGameValidation() then
             if hand ==1 then
-                timer.performWithDelay(2000, function()
+                timer.performWithDelay(1400, function()
                     if table.maxn(playAreaGroupCards) == 0 then 
                         YourTurn("start")
                     end
                 end)
             elseif hand == 2 then
                 if handMaxCards ~= true then
-                    timer.performWithDelay(2000, function()
+                    timer.performWithDelay(1400, function()
                         AddCards (user2Cards)
-                        timer.performWithDelay(2000, function ()
+                        timer.performWithDelay(1400, function ()
                             if CutCards (getNextUserToCut()) then
                                 if handMaxCards ~= true then
-                                    timer.performWithDelay(2000, function()
+                                    timer.performWithDelay(1400, function()
                                         AddCards (user4Cards)
                                         if handMaxCards ~= true then
                                             timer.performWithDelay(1000, function()
@@ -402,11 +402,11 @@ function GamePlay()
                 end
             elseif hand == 3 then
                 if handMaxCards ~= true then
-                    timer.performWithDelay(2000, function()
+                    timer.performWithDelay(1400, function()
                         AddCards (user3Cards)
-                        timer.performWithDelay(2000, function ()
+                        timer.performWithDelay(1400, function ()
                             if CutCards (getNextUserToCut()) then
-                                timer.performWithDelay(2000, function()
+                                timer.performWithDelay(1400, function()
                                     if handMaxCards ~= true then
                                         YourTurn("add")                             
                                     else
@@ -414,7 +414,7 @@ function GamePlay()
                                     end
                                 end)
                             else                                                   
-                                timer.performWithDelay( 2000, RotateToNextUserBy2(getNextUserToCut()) )
+                                timer.performWithDelay( 1400, RotateToNextUserBy2(getNextUserToCut()) )
                             end
                         end)
                     end)
@@ -919,14 +919,17 @@ function fillUpUsers()
 
     if (table.maxn(user2Cards) < 6 ) then
         dealUser2(6  - table.maxn(user2Cards))
+        updateCardCounter()
     end
 
     if (table.maxn(user3Cards) < 6) then
         dealUser3(6  - table.maxn(user3Cards))
+        updateCardCounter()
     end
 
     if (table.maxn(user4Cards) < 6) then
         dealUser4(6  - table.maxn(user4Cards))
+        updateCardCounter()
     end
 end
 function findEmptySpotInHolder()
