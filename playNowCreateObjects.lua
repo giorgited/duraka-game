@@ -37,15 +37,14 @@ function createAllObjects(sceneGroup)
     background.fill.effect.intensity = -.3
 
     sceneGroup:insert( background )
-    local cutterSuit = display.newText( "Cutter Suit", maxX - 32, zeroY + sceneGroup.cardHeight/2 - 10, native.systemFontBold, 12)
 
-    sceneGroup:insert(cutterSuit)
     createSceneGrid(sceneGroup)
     createMyUserObjects(sceneGroup)
     createUser2Objects(sceneGroup)
     createUser3Objects(sceneGroup)
     createUser4Objects(sceneGroup)
     createCardObjects(sceneGroup)
+    createCutterCardObject(sceneGroup)
 
     
 end
@@ -129,6 +128,11 @@ function createMyUserObjects(sceneGroup)
     myUserArea.doneButton = doneButton
     myUserArea:insert(doneButton)
 
+    local text = display.newText( "You Completed The Game! ", myUserArea.x, myUserArea.y, native.systemFontBold, 20)
+    text.isVisible = false
+    myUserArea.completionText =  text
+
+    
     sceneGroup.myUserArea = myUserArea
     sceneGroup:insert(myUserArea)
 end
@@ -249,4 +253,48 @@ function createCardObjects(sceneGroup)
     
     sceneGroup.numOfCardsDeck = numOfCardsDeck
     sceneGroup:insert(numOfCardsDeck)
+end
+
+function createCutterCardObject(sceneGroup)
+    local cutterSuit = display.newText( "Cutter Suit", maxX - 32, zeroY + sceneGroup.cardHeight/2 - 10, native.systemFontBold, 12)
+
+    local cutterHeart = display.newImageRect( "images/heart.png", display.actualContentWidth, display.actualContentHeight )
+    cutterHeart.x = cutterSuit.x
+    cutterHeart.y = cutterSuit.y + 30
+    cutterHeart.width= 30 
+    cutterHeart.height = 30 
+    cutterHeart.isVisible = false
+    cutterHeart.value = "H"
+    local cutterDiamond = display.newImageRect( "images/diamond.png", display.actualContentWidth, display.actualContentHeight )
+    cutterDiamond.x = cutterSuit.x
+    cutterDiamond.y = cutterSuit.y + 30
+    cutterDiamond.width= 40 
+    cutterDiamond.height = 40 
+    cutterDiamond.isVisible = false
+    cutterDiamond.value = "D"
+    local cutterClub = display.newImageRect( "images/club.png", display.actualContentWidth, display.actualContentHeight )
+    cutterClub.x = cutterSuit.x
+    cutterClub.y = cutterSuit.y + 30
+    cutterClub.width= 30 
+    cutterClub.height = 30 
+    cutterClub.isVisible = false
+    cutterClub.value = "C"
+    local cutterSpade = display.newImageRect( "images/spade.png", display.actualContentWidth, display.actualContentHeight )
+    cutterSpade.x = cutterSuit.x
+    cutterSpade.y = cutterSuit.y + 30
+    cutterSpade.width= 30 
+    cutterSpade.height = 40 
+    cutterSpade.isVisible = false
+    cutterSpade.value = "S"
+    local cutters = {}
+    table.insert(cutters, cutterHeart)
+    table.insert(cutters, cutterDiamond)
+    table.insert(cutters, cutterClub)
+    table.insert(cutters, cutterSpade)
+
+    local a = cutters[math.random(4)]    
+    a.isVisible = true
+
+    sceneGroup.cutterCard = a
+    sceneGroup:insert(a)
 end

@@ -28,7 +28,7 @@ function scene:create( event )
 	local sceneGroup = self.view
 
 	-- display a background image
-	local background = display.newImageRect( "main-menu-background.png", display.actualContentWidth, display.actualContentHeight )
+	local background = display.newImageRect( "images/main-menu-background.png", display.actualContentWidth, display.actualContentHeight )
 	background.anchorX = 0
 	background.anchorY = 0
 	background.x = 0 + display.screenOriginX
@@ -39,7 +39,7 @@ function scene:create( event )
 	local centerY = display.contentCenterY
 	-- create/position logo/title image on upper-half of the screen
   local subtitleLogo = display.newText( "Game Over", centerX, centerY-150, native.systemFont, 30)
-  local backIcon = display.newImage(  "back-icon.png", display.screenOriginX + 15, display.screenOriginY + 15)
+  local backIcon = display.newImage(  "images/back-icon.png", display.screenOriginX + 15, display.screenOriginY + 15)
   backIcon.width = 30
   backIcon.height = 30
   backIcon:addEventListener("tap", backToMenuClicked)

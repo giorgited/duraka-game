@@ -28,7 +28,7 @@ local user2backCards,user3backCards, user4backCards = {}, {}, {}
 local handCardIndex = 1
 local yourTurn      = false
 local counter       = 1
-local hand          = 1
+local hand          = 4
 local cutterSuit
 local deckIsEmpty = false
 local UserToAddIndex 
@@ -36,37 +36,40 @@ local UserToCutIndex
 local myCardWasAdded = false
 local handMaxCards = false
 local totalHandCut = 0
+local yourCutting = false
 math.randomseed(os.time())
 
 --------------------------------------------------------------------------------------------------
 function cardTapped(event)
-    if (hand == 4 ) then
-        local validateResult = ValidateMyCut(event.target)
-        if validateResult.canCut==true then
-            AddMyCard(event.target, validateResult)
-        else 
-            UpdateStatusBar("You Cant Cut With That!..")
-        end
-    else
-        if yourTurn then
-            if handMaxCards ~= true then
-                local added = AddMyCard(event.target)
-                if added then 
-                    myCardWasAdded = true
-                    myUserArea.doneButton:setEnabled(true)
-                    myUserArea.doneButton:setFillColor(1)
-                end
-            else
-                if isAllCardsCut() ~= true then
-                    if CutCards(getNextUserToCut()) then
-                        RotateToNextUserBy1()
-                    else
-                        RotateToNextUserBy2(getNextUserToCut())
+    print(yourTurn)
+    if yourTurn then
+        if (hand == 4 ) then
+            local validateResult = ValidateMyCut(event.target)
+            if validateResult.canCut==true then
+                AddMyCard(event.target, validateResult)
+            else 
+                UpdateStatusBar("You Cant Cut With That!..")
+            end
+        else
+                if handMaxCards ~= true then
+                    local added = AddMyCard(event.target)
+                    if added then 
+                        myCardWasAdded = true
+                        myUserArea.doneButton:setEnabled(true)
+                        myUserArea.doneButton:setFillColor(1)
+
                     end
                 else
-                    RotateToNextUserBy1()
-                end                
-            end
+                    if isAllCardsCut() ~= true then
+                        if CutCards(getNextUserToCut()) then
+                            RotateToNextUserBy1()
+                        else
+                            RotateToNextUserBy2(getNextUserToCut())
+                        end
+                    else
+                        RotateToNextUserBy1()
+                    end                
+                end
         end
     end
     return true
@@ -120,7 +123,16 @@ end
 
 function doneButtonPressed (event)
     myUserArea.doneButton:setFillColor( 0 )
+    yourTurn = false
 
+    if table.maxn(myCards) == 0 and deckIsEmpty then
+        print("im done")
+        local ind = table.indexOf(playersInGame, myCards )
+        table.remove(playersInGame, ind)
+
+        myUserArea.alpha = .1
+        myUserArea.completionText.isVisible = true
+    end
     if hand == 1 then
         if isAllCardsCut() then
             RotateToNextUserBy1()
@@ -342,13 +354,13 @@ function dealUser4(numberOfCards)
      end
 end
 function dealCards(numberPerPerson)
-    dealMe(6)
+    dealMe(12)
     updateCardCounter()
-    dealUser2(6)
+    dealUser2(15)
     updateCardCounter()
-    dealUser3(6)
+    dealUser3(10)
     updateCardCounter()
-    dealUser4(6)
+    dealUser4(15)
     updateCardCounter()
     timer.performWithDelay(4000, reArrangeMyCards)
     yourTurn = true
@@ -364,6 +376,7 @@ function GamePlay()
         timer.performWithDelay(5000,function()
         composer.gotoScene( "GameOver", "fade", 500 ) end)
     else
+        yourCutting = false
         if hand > 4 then hand = 1  end
         if UserInGameValidation() then
             if hand ==1 then
@@ -422,6 +435,7 @@ function GamePlay()
                     MaxCardsPlayedProcess()               
                 end
             elseif hand == 4 then
+                yourCutting = true
                 if handMaxCards ~= true then 
                     timer.performWithDelay(1400, function() 
                         AddCards(user4Cards)
@@ -451,35 +465,6 @@ function GamePlay()
         end
     end
 end
-
--- local automatedHand = 1
--- local ind = table.indexOf(playersInGame, myCards )
---     table.remove(playersInGame, ind)
--- function AutomateGame()
-    
-
---     if automatedHand > table.maxn(playersInGame) then automatedHand = 1 end
---     if table.maxn(playersInGame) == 1 then 
---         print ("jjjjjjjjjjj")
---         timer.performWithDelay(5000,function()
---         composer.gotoScene( "GameOver", "fade", 500 ) end)
---     else
---         print ("jjjjjjjjjjj")
---         timer.performWithDelay(1400, function()
---             AddCards(playersInGame[automatedHand])
---                 timer.performWithDelay(1400, function()
---                     if CutCards(playersInGame[automatedHand + 1]) then
---                         AddCards(playersInGame[automatedHand + 2])
---                         AutomateGame()
---                     else
---                         ClearTheBoard(false, playersInGame[automatedHand + 1])
---                         automatedHand = automatedHand + 1
---                         AutomateGame()
---                     end
---                 end)
---         end)
---     end
--- end
 function YourTurn(request)
     myUserArea.doneButton:setFillColor( 1 )
     yourTurn = true
@@ -492,7 +477,9 @@ function YourTurn(request)
     end
 end
 function AddCards(userCards)
-    if getNextUserToCut().name == userCards.name then return end
+    if getNextUserToCut().name == userCards.name or userCards.name == "You" then
+        return
+    end
     UpdateStatusBar(userCards.name .. " is Adding a Card !")
 
     if (table.maxn(playAreaGroupCards) == 0) then
@@ -799,7 +786,8 @@ function ValidatedDraggedCut(cutterCard,card)
     return result
 end
 function AssignCutterSuit()
-    cutterSuit = getCardSuit(cards[52])
+    cutterSuit = sceneGroup.cutterCard.value
+    print(cutterSuit)
 end
 function UserHasEndedGame(userArea, userBackCards, userCards)
     if deckIsEmpty then 
@@ -855,17 +843,21 @@ function RotateToNextUserBy2(userCards)
     GamePlay()
 end
 function MaxCardsPlayedProcess()
-    timer.performWithDelay(1400, function()
-        if isAllCardsCut() ~= true  then
-            if CutCards(getNextUserToCut()) then
-                timer.performWithDelay( 1000, RotateToNextUserBy1 )
+    if yourCutting~= true then
+        timer.performWithDelay(1400, function()
+            if isAllCardsCut() ~= true  then
+                if CutCards(getNextUserToCut()) then
+                    timer.performWithDelay( 1000, RotateToNextUserBy1 )
+                else
+                    timer.performWithDelay( 1000, RotateToNextUserBy2(getNextUserToCut()) )
+                end
             else
-                timer.performWithDelay( 1000, RotateToNextUserBy2(getNextUserToCut()) )
+                RotateToNextUserBy1() 
             end
-        else
-            RotateToNextUserBy1() 
-        end
-    end)
+        end)
+    else
+        YourTurn("cut")
+    end
     
 end
 ---------------------------------------HELPERS--------------------------------------------------
@@ -874,9 +866,11 @@ function UpdateStatusBar(action)
 end
 function getNextUserToCut()
     local index = hand + 1
+    
     if index > table.maxn(playersInGame) then index = 1 end
 
     return playersInGame[index]  
+    
 end
 function isCertainUserInGame(userCards)
     local userInGame = false
@@ -1011,6 +1005,7 @@ function findNextPlayAreaSpot()
 end
 function reArrangeMyCards()
     if (table.maxn( myCards ) <= 6 ) then
+        print(table.maxn(myCards))
         local cx, cy = myUserArea.myUserCards:localToContent(0,0)
         local initialSpot = cx - 1/2*myUserArea.myUserCards.width + 1/2*cardWidth+2
         
@@ -1018,6 +1013,7 @@ function reArrangeMyCards()
             transition.moveTo(myCards[i], {x=initialSpot + (i-1)*cardWidth, y=cy, time = 1})
             myCards[i].parent:insert(myCards[i])
             myCards[i].contentBounds.xMax = myCards[i].contentBounds.xMin + cardWidth
+            myCards[i].isVisible = true
             --myCards[i]:addEventListener( "tap", cardTapped )
         end
         
@@ -1028,6 +1024,7 @@ function reArrangeMyCards()
         
         local del = 100
         for i =1, table.maxn( myCards ) do
+
             myCards[i].parent:insert(myCards[i])
             myCards[i].contentBounds.xMax = myCards[i].contentBounds.xMin + spacePerCard
             myCards[i].isVisible = true
@@ -1117,6 +1114,7 @@ function hasCollided( obj1, obj2 )
  
     return (left or right) and (up or down)
 end
+
 -------------------------------Scene Create/Show/Destroy-----------------------------------------
 function scene:create( event )
     sceneGroup = self.view
@@ -1136,12 +1134,6 @@ function scene:create( event )
     shuffleCards(cards)
 
 
-    sceneGroup.cards[52].x = maxX - 30
-    sceneGroup.cards[52].y = zeroY + sceneGroup.cardHeight/2 + 30
-    sceneGroup.cards[52].width= sceneGroup.cardWidth 
-    sceneGroup.cards[52].height = sceneGroup.cardHeight 
-    sceneGroup.cards[52].isVisible = true
-    sceneGroup:insert(sceneGroup.cards[52])
     sceneGroup:insert(backCards[52])
     AssignCutterSuit()
 
