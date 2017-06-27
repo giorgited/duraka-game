@@ -268,7 +268,7 @@ function createCutterCardObject(sceneGroup)
     local cutterDiamond = display.newImageRect( "images/diamond.png", display.actualContentWidth, display.actualContentHeight )
     cutterDiamond.x = cutterSuit.x
     cutterDiamond.y = cutterSuit.y + 30
-    cutterDiamond.width= 40 
+    cutterDiamond.width= 40  
     cutterDiamond.height = 40 
     cutterDiamond.isVisible = false
     cutterDiamond.value = "D"
