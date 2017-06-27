@@ -28,7 +28,7 @@ local user2backCards,user3backCards, user4backCards = {}, {}, {}
 local handCardIndex = 1
 local yourTurn      = false
 local counter       = 1
-local hand          = 4
+local hand          = 1
 local cutterSuit
 local deckIsEmpty = false
 local UserToAddIndex 
@@ -130,30 +130,41 @@ function doneButtonPressed (event)
         local ind = table.indexOf(playersInGame, myCards )
         table.remove(playersInGame, ind)
 
+        ClearTheBoard(true)
+        GameOver = true
+
         myUserArea.alpha = .1
         myUserArea.completionText.isVisible = true
-    end
-    if hand == 1 then
-        if isAllCardsCut() then
-            RotateToNextUserBy1()
-        else
-            hand1Helper()
-        end
-    elseif hand == 2 then
-        if isAllCardsCut() then
-           RotateToNextUserBy1()
-        else
-            hand2Helper()
-        end
-    elseif hand == 3 then
-        hand3Helper()
-    elseif hand == 4 then
-        if isAllCardsCut() == false then
-            ClearTheBoard(false, myCards)
-            hand =  2
-            GamePlay()
-        else
-            hand4Helper()
+
+        local options = { effect = "crossFade", time = 500, params = { points = table.maxn(playersInGame) * (table.maxn(user2Cards) + table.maxn(user3Cards) + table.maxn(user4Cards))} }
+        composer.gotoScene( "GameOver", options ) 
+    else
+        if hand == 1 then
+            if isAllCardsCut() then
+                RotateToNextUserBy1()
+            else
+                hand1Helper()
+            end
+        elseif hand == 2 then
+            if isAllCardsCut() then
+               RotateToNextUserBy1()
+            else
+                hand2Helper()
+            end
+        elseif hand == 3 then
+            hand3Helper()
+        elseif hand == 4 then
+            if isAllCardsCut() == false then
+                ClearTheBoard(false, myCards)
+                hand =  2
+                GamePlay()
+            elseif isAllCardsCut() and handMaxCards then
+                ClearTheBoard(true)
+                hand =  hand  + 1
+                GamePlay()
+            else
+                hand4Helper()
+            end
         end
     end
 end
@@ -354,11 +365,11 @@ function dealUser4(numberOfCards)
      end
 end
 function dealCards(numberPerPerson)
-    dealMe(12)
+    dealMe(2)
     updateCardCounter()
-    dealUser2(15)
+    dealUser2(18)
     updateCardCounter()
-    dealUser3(10)
+    dealUser3(17)
     updateCardCounter()
     dealUser4(15)
     updateCardCounter()
@@ -1173,11 +1184,21 @@ function scene:destroy( event )
     -- INSERT code here to cleanup the scene
     -- e.g. remove display objects, remove touch listeners, save state, etc.
 
-    console.log("clenaup")
     if playBtn then
         playBtn:removeSelf()    -- widgets must be manually removed
         playBtn = nil
     end
+    sceneGroup:removeSelf()
+    print("removing play scenegroup")
+end
+function scene:hide(event)
+ 
+if event.phase =="did" then
+composer.removeScene("current")
+print ("remove current scene ")
+prevScene = nil
+ 
+end
 end
 ---------------------------------------------------------------------------------
 

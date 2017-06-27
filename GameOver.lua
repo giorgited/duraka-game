@@ -25,6 +25,9 @@ local function onPlayBtnRelease()
 		return true	-- indicates successful touch
 end
 function scene:create( event )
+	composer.removeScene("playNow")
+	print ("WE ARE ARE GAME OVER WHOOP WHOOOOOPPPPPPPPPP ---------")
+	print (event.params.points)
 	local sceneGroup = self.view
 
 	-- display a background image

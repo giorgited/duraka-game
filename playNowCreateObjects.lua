@@ -132,7 +132,7 @@ function createMyUserObjects(sceneGroup)
     text.isVisible = false
     myUserArea.completionText =  text
 
-    
+
     sceneGroup.myUserArea = myUserArea
     sceneGroup:insert(myUserArea)
 end
@@ -257,7 +257,7 @@ end
 
 function createCutterCardObject(sceneGroup)
     local cutterSuit = display.newText( "Cutter Suit", maxX - 32, zeroY + sceneGroup.cardHeight/2 - 10, native.systemFontBold, 12)
-
+    sceneGroup:insert(cutterSuit)
     local cutterHeart = display.newImageRect( "images/heart.png", display.actualContentWidth, display.actualContentHeight )
     cutterHeart.x = cutterSuit.x
     cutterHeart.y = cutterSuit.y + 30
