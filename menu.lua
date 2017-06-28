@@ -39,7 +39,6 @@ function scene:create( event )
 	background.anchorY = 0
 	background.x = 0 + display.screenOriginX
 	background.y = 0 + display.screenOriginY
-	
 	local centerX = display.contentCenterX
 	local centerY = display.contentCenterY
 
@@ -52,12 +51,29 @@ function scene:create( event )
 			playNow:setStrokeColor( .6, 0, 0 )
 			playNow.x = centerX
 			playNow.y = centerY-43
+	playTxt = widget.newButton{
+					x= playNow.x, y = playNow.y,
+ 					width=playNow.width, height=playNow.height,
+ 					onRelease = onPlayBtnRelease	-- event listener function
+ 			}
+	sceneGroup:insert( playNow )
+ 	sceneGroup:insert( playTxt )
+
+
 	local howToPlay = display.newRoundedRect( 0, 0, 170,  100, 7 )
 			howToPlay.strokeWidth = 3
 			howToPlay:setFillColor(0,0,0,0)
 			howToPlay:setStrokeColor( .6, 0, 0 )
 			howToPlay.x = centerX -2
 			howToPlay.y = centerY+90
+	howToTxt = widget.newButton{
+					x= howToPlay.x, y = howToPlay.y,
+ 					width=howToPlay.width, height=howToPlay.height,
+ 					onRelease = onHowToBtnRelease	-- event listener function
+ 			}
+ 	sceneGroup:insert( howToPlay )
+ 	sceneGroup:insert( howToTxt )
+
 
 	local scores = display.newRoundedRect( 0, 0, 170,  100, 7 )
 			scores.strokeWidth = 3
@@ -65,6 +81,13 @@ function scene:create( event )
 			scores:setStrokeColor( .6, 0, 0 )
 			scores.x = centerX -2
 			scores.y = centerY+231
+	scoresTxt = widget.newButton{
+					x= scores.x, y = scores.y,
+ 					width=scores.width, height=scores.height,
+ 					onRelease = onAboutBtnRelease	-- event listener function
+ 			}
+ 	sceneGroup:insert( scores )
+ 	sceneGroup:insert( scoresTxt )
 
 end
 
