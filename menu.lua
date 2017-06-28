@@ -34,83 +34,37 @@ function scene:create( event )
 	local sceneGroup = self.view
 
 	-- display a background image
-	local background = display.newImageRect( "images/ace-backg.png", display.actualContentWidth, display.actualContentHeight )
+	local background = display.newImageRect( "images/mainMenu.png", display.actualContentWidth, display.actualContentHeight )
 	background.anchorX = 0
 	background.anchorY = 0
 	background.x = 0 + display.screenOriginX
 	background.y = 0 + display.screenOriginY
-	background.alpha = .8
+	
 	local centerX = display.contentCenterX
 	local centerY = display.contentCenterY
-	-- create/position logo/title image on upper-half of the screen
-	local titleLogo = display.newText( "Duraka", centerX, 60, native.systemFont, 55)
-	titleLogo:setFillColor( 0, 0, 0 )
 
 
-	local cardsImg = display.newImage("images/cards.png", centerX, 200)
-				cardsImg.width = 150
-				cardsImg.height = 130
-	cardsImg.isVisible = false
-	--how to play rectangle
-	local playBtn = display.newRoundedRect( 0, 0, 150,  50, 12 )
-				playBtn.strokeWidth = 3
-				playBtn:setFillColor( 0 )
-				playBtn:setStrokeColor( 1, 0, 0 )
-				playBtn.x = centerX
-				playBtn.y = cardsImg.y + 150
-	--how to play text
-	playTxt = widget.newButton{
-					label="Play Now",
-					labelColor = { default={255}, over={128} },
-					width=154, height=40,
-					onRelease = onPlayBtnRelease	-- event listener function
-	}
-	playTxt.x = display.contentCenterX
-	playTxt.y = cardsImg.y + 150
-
-	--how to play rectangle
-	local howToBtn = display.newRoundedRect( 0, 0, 150,  50, 12 )
-				howToBtn.strokeWidth = 3
-				howToBtn:setFillColor( 0 )
-				howToBtn:setStrokeColor( 1, 0, 0 )
-				howToBtn.x = centerX
-				howToBtn.y = playBtn.y + 60
-	--how to play text
-	howToTxt = widget.newButton{
-					label="How To Play",
-					labelColor = { default={255}, over={128} },
-					width=154, height=40,
-					onRelease = onHowToBtnRelease	-- event listener function
-	}
-	howToTxt.x = display.contentCenterX
-	howToTxt.y = playBtn.y + 60
-
-	--about rectangle
-	local aboutBtn = display.newRoundedRect( 0, 0, 150,  50, 12 )
-				aboutBtn.strokeWidth = 3
-				aboutBtn:setFillColor( 0 )
-				aboutBtn:setStrokeColor( 1, 0, 0 )
-				aboutBtn.x = centerX
-				aboutBtn.y = howToBtn.y + 60
-	--about text
-	aboutTxt = widget.newButton{
-					label="About",
-					labelColor = { default={255}, over={128} },
-					width=154, height=40,
-					onRelease = onAboutBtnRelease	-- event listener function
-	}
-	aboutTxt.x = display.contentCenterX
-	aboutTxt.y = howToBtn.y + 60
-	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
-	sceneGroup:insert( titleLogo )
-	sceneGroup:insert( playBtn)
-	sceneGroup:insert( playTxt )
-	sceneGroup:insert( howToBtn)
-	sceneGroup:insert( howToTxt )
-	sceneGroup:insert( aboutBtn)
-	sceneGroup:insert( aboutTxt)
-	sceneGroup:insert( cardsImg)
+
+	local playNow = display.newRoundedRect( 0, 0, 164,  100, 7 )
+			playNow.strokeWidth = 3
+			playNow:setFillColor(0,0,0,0)
+			playNow:setStrokeColor( .6, 0, 0 )
+			playNow.x = centerX
+			playNow.y = centerY-43
+	local howToPlay = display.newRoundedRect( 0, 0, 170,  100, 7 )
+			howToPlay.strokeWidth = 3
+			howToPlay:setFillColor(0,0,0,0)
+			howToPlay:setStrokeColor( .6, 0, 0 )
+			howToPlay.x = centerX -2
+			howToPlay.y = centerY+90
+
+	local scores = display.newRoundedRect( 0, 0, 170,  100, 7 )
+			scores.strokeWidth = 3
+			scores:setFillColor(0,0,0,0)
+			scores:setStrokeColor( .6, 0, 0 )
+			scores.x = centerX -2
+			scores.y = centerY+231
 
 end
 
