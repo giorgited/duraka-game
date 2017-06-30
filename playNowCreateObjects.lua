@@ -45,8 +45,6 @@ function createAllObjects(sceneGroup)
     createUser4Objects(sceneGroup)
     createCardObjects(sceneGroup)
     createCutterCardObject(sceneGroup)
-
-    
 end
 function storeSharedVariables(sceneGroup)
     sceneGroup.cardWidth = (maxX - 30)/6
@@ -90,7 +88,6 @@ function createSceneGrid(sceneGroup)
             playArea.y = centerY
     sceneGroup.playArea = playArea
 end
-
 function createMyUserObjects(sceneGroup)
     local yourTurnText = display.newText( "Your Turn",0, 0, native.systemFontBold, 16)
     myUserArea.yourTurnText = yourTurnText
@@ -254,7 +251,6 @@ function createCardObjects(sceneGroup)
     sceneGroup.numOfCardsDeck = numOfCardsDeck
     sceneGroup:insert(numOfCardsDeck)
 end
-
 function createCutterCardObject(sceneGroup)
     local cutterSuit = display.newText( "Cutter Suit", maxX - 32, zeroY + sceneGroup.cardHeight/2 - 10, native.systemFontBold, 12)
     sceneGroup:insert(cutterSuit)

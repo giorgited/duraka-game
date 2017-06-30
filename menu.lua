@@ -87,30 +87,13 @@ function scene:create( event )
  					onRelease = onAboutBtnRelease	-- event listener function
  			}
  	sceneGroup:insert( scores )
- 	sceneGroup:insert( scoresTxt )
+ 	sceneGroup:insert( scoresTxt
+ 	 )
 
 end
 
 function scene:destroy( event )
 	local sceneGroup = self.view
-
-	-- Called prior to the removal of scene's "view" (sceneGroup)
-	--
-	-- INSERT code here to cleanup the scene
-	-- e.g. remove display objects, remove touch listeners, save state, etc.
-
-	if playTxt then
-		playBtn:removeSelf()	-- widgets must be manually removed
-		playBtn = nil
-	end
-	if howToTxt then
-		playBtn:removeSelf()	-- widgets must be manually removed
-		playBtn = nil
-	end
-	if aboutTxt then
-		playBtn:removeSelf()	-- widgets must be manually removed
-		playBtn = nil
-	end
 end
 
 ---------------------------------------------------------------------------------

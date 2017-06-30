@@ -4,6 +4,7 @@
 --
 -----------------------------------------------------------------------------------------
 local playNowCreateObjects = require("playNowCreateObjects")
+local loadsave = require("loadsave")
 local scene = composer.newScene()
 local myUserArea, user2Area, user3Area, user4Area
 local cards, backCards, playAreaGroup, cardWidth, cardHeight
@@ -365,13 +366,13 @@ function dealUser4(numberOfCards)
      end
 end
 function dealCards(numberPerPerson)
-    dealMe(2)
+    dealMe(6)
     updateCardCounter()
-    dealUser2(18)
+    dealUser2(6)
     updateCardCounter()
-    dealUser3(17)
+    dealUser3(6)
     updateCardCounter()
-    dealUser4(15)
+    dealUser4(6)
     updateCardCounter()
     timer.performWithDelay(4000, reArrangeMyCards)
     yourTurn = true
@@ -384,6 +385,7 @@ function GamePlay()
         print ("$$  AT THIS POINT GAME IS OVER AND USER ".. hand .. " LOST.. REROUTE TO GAME OVER..  $$")
         print ("$$                                                                                   $$")
         print ("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+        CleanUpTheScene()
         timer.performWithDelay(5000,function()
         composer.gotoScene( "GameOver", "fade", 500 ) end)
     else
@@ -871,6 +873,77 @@ function MaxCardsPlayedProcess()
     end
     
 end
+function CleanUpTheScene()
+
+    if #myCards > 0 then
+        for i=1, #myCards do
+            myCards[i]:removeSelf()
+            myCards[i] = nil   
+        end
+    end
+    if #user2Cards > 0 then
+        for i=1, #user2Cards do
+            user2Cards[i]:removeSelf()
+            user2Cards[i] = nil   
+        end
+    end
+    if #user3Cards > 0 then
+        for i=1, #user3Cards do
+            user3Cards[i]:removeSelf()
+            user3Cards[i] = nil   
+        end
+    end
+    if #user4Cards > 0 then
+        for i=1, #user4Cards do
+            user4Cards[i]:removeSelf()
+            user4Cards[i] = nil   
+        end
+    end
+
+    --createCardObjects(sceneGroup)
+    
+end
+function MoveToGameOver()
+    timer.performWithDelay(5000, function()
+
+        local place = ""
+        if (4 - #playersInGame) == 1 then place ="1st"
+        else finishedplace = tostring(4-#playersInGame) .."th"
+        end
+        local finishedpoints = (table.maxn(playersInGame) * (table.maxn(user2Cards) + table.maxn(user3Cards) +       table.maxn(user4Cards)))/2
+        local options = { effect = "crossFade", time = 500, params = 
+                            { points = finishedpoints,
+                              place = finishedplace
+                            } 
+                        }
+        UpdateUserScores(finishedpoints)
+        CleanUpTheScene()
+        composer.gotoScene( "GameOver", options )
+    end)
+end
+function UpdateUserScores(score)
+    local currentInfo = loadsave.loadTable("userInfo.json")
+    local userInfo 
+
+    if (currentInfo == nil) then --create fresh file
+        userInfo = {
+                        highestScore = score,
+                        totalScore   = score
+                    }
+    else --update file
+        local highScore = currentInfo["highestScore"]
+        local totalScore = currentInfo["totalPoints"]
+        if (score > highScore) then
+            highScore = score
+        end
+
+        userInfo = {
+                        highestScore  = highScore,
+                        totalPoints   = totalScore + score
+                    }
+    end
+    loadsave.saveTable(userInfo, "userInfo.json")
+end
 ---------------------------------------HELPERS--------------------------------------------------
 function UpdateStatusBar(action)
     myUserArea.yourTurnText.text = action
@@ -1129,6 +1202,7 @@ end
 -------------------------------Scene Create/Show/Destroy-----------------------------------------
 function scene:create( event )
     sceneGroup = self.view
+    
 
     createAllObjects(sceneGroup)
 
@@ -1160,45 +1234,34 @@ function scene:create( event )
 end
 function scene:show( event )
     local sceneGroup = self.view
+
     local phase = event.phase
 
     if phase == "will" then
+        
         -- Called when the scene is still off screen and is about to move on screen
     elseif phase == "did" then
-        -- Called when the scene is now on screen
-        --
-        -- INSERT code here to make the scene come alive
-        -- e.g. start timers, begin animation, play audio, etc.
-        --physics.start()
 
     dealCards(6)
     GamePlay()
+    MoveToGameOver()
+    
     --AutomateGame()
     end
 end
 function scene:destroy( event )
     local sceneGroup = self.view
 
-    -- Called prior to the removal of scene's "view" (sceneGroup)
-    --
-    -- INSERT code here to cleanup the scene
-    -- e.g. remove display objects, remove touch listeners, save state, etc.
-
-    if playBtn then
-        playBtn:removeSelf()    -- widgets must be manually removed
-        playBtn = nil
-    end
     sceneGroup:removeSelf()
     print("removing play scenegroup")
 end
 function scene:hide(event)
- 
-if event.phase =="did" then
-composer.removeScene("current")
-print ("remove current scene ")
-prevScene = nil
- 
-end
+    composer.recycleOnSceneChange = true
+    if event.phase =="did" then
+        composer.removeScene("current")
+        print ("remove current scene ")
+        prevScene = nil
+    end
 end
 ---------------------------------------------------------------------------------
 
