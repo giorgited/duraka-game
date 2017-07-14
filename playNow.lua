@@ -182,6 +182,7 @@ function hand1Helper()
                                         print ("IS IT YOUR TURN RIGHT NOW?? PERHAPS SHOULD BE" .. tostring(handMaxCards))
                                         if handMaxCards ~= true then
                                             YourTurn("add")
+                                            
                                         else
                                             MaxCardsPlayedProcess()
                                         end
