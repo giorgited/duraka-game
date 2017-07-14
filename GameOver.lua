@@ -28,9 +28,9 @@ function scene:create( event )
 
 	--LOAD USER INFO FROM FILE
 	local currentInfo  = loadsave.loadTable("userInfo.json")
-	local totalPoints  = currentInfo["totalPoints"]
+	local totalScore  = currentInfo["totalScore"]
 	local highestScore = currentInfo["highestScore"]
-	
+	print (highestScore)
 
 	-- display a background image
 	local background = display.newImageRect( "images/main-menu-background.png", display.actualContentWidth, display.actualContentHeight )
@@ -48,7 +48,7 @@ function scene:create( event )
 	local highestScoreText = display.newText( "Highest Score: " .. highestScore, 0, 10, native.systemFont, 12)
 		highestScoreText.x = maxX - highestScoreText.width/2 -1
 
-	local TotalScoreText = display.newText( "Total Score: " .. totalPoints, 0, highestScoreText.y + 20, native.systemFont, 12)
+	local TotalScoreText = display.newText( "Total Score: " .. totalScore, 0, highestScoreText.y + 20, native.systemFont, 12)
 		TotalScoreText.x = maxX - TotalScoreText.width/2 -1
 	--GAME STATS
     local gameOverText = display.newText( "Game Over", centerX, centerY-150, native.systemFont, 30)

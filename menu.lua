@@ -6,7 +6,7 @@
 
 local composer = require( "composer" )
 local scene = composer.newScene()
-
+local loadsave = require("loadsave")
 -- include Corona's "widget" library
 local widget = require "widget"
 
@@ -25,11 +25,27 @@ local function onHowToBtnRelease()
 		return true	-- indicates successful touch
 end
 local function onAboutBtnRelease()
-		composer.gotoScene( "about", "fade", 500 )
+		composer.gotoScene( "scores", "fade", 500 )
 		return true	-- indicates successful touch
 end
 
-
+local function createScores()
+	local currentInfo = loadsave.loadTable("userInfo.json")
+    local userInfo 
+    if (currentInfo == nil) then --create fresh file
+        userInfo = {
+                        highestScore = 0,
+                        totalScore   = 0,
+                        firstPlace   = 0,
+                        secondPlace  = 0,
+                        thirdPlace   = 0,
+                        fourthPlace  = 0,
+                        totalGames   = 0
+                    }
+        loadsave.saveTable(userInfo, "userInfo.json")
+    end
+    
+end
 function scene:create( event )
 	local sceneGroup = self.view
 
@@ -42,7 +58,7 @@ function scene:create( event )
 	local centerX = display.contentCenterX
 	local centerY = display.contentCenterY
 
-
+	createScores()
 	sceneGroup:insert( background )
 
 	local playNow = display.newRoundedRect( 0, 0, 164,  100, 7 )

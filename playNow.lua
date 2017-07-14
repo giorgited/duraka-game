@@ -137,8 +137,7 @@ function doneButtonPressed (event)
         myUserArea.alpha = .1
         myUserArea.completionText.isVisible = true
 
-        local options = { effect = "crossFade", time = 500, params = { points = table.maxn(playersInGame) * (table.maxn(user2Cards) + table.maxn(user3Cards) + table.maxn(user4Cards))} }
-        composer.gotoScene( "GameOver", options ) 
+        MoveToGameOver()
     else
         if hand == 1 then
             if isAllCardsCut() then
@@ -249,7 +248,7 @@ function hand4Helper()
                     if handMaxCards ~= true then
                         timer.performWithDelay(1400, function () 
                             AddCards(user4Cards) 
-                            timer.performWithDelay(1400, function()
+                            timer.performWithDelay(200, function()
                                 if isAllCardsCut() then
                                     RotateToNextUserBy1()
                                 else
@@ -907,7 +906,7 @@ function MoveToGameOver()
     timer.performWithDelay(5000, function()
 
         local place = ""
-        if (4 - #playersInGame) == 1 then place ="1st"
+        if (4 - #playersInGame) == 1 then finishedplace ="1st"
         else finishedplace = tostring(4-#playersInGame) .."th"
         end
         local finishedpoints = (table.maxn(playersInGame) * (table.maxn(user2Cards) + table.maxn(user3Cards) +       table.maxn(user4Cards)))/2
@@ -916,32 +915,48 @@ function MoveToGameOver()
                               place = finishedplace
                             } 
                         }
-        UpdateUserScores(finishedpoints)
+        UpdateUserScores(finishedpoints, 4-#playersInGame)
         CleanUpTheScene()
         composer.gotoScene( "GameOver", options )
     end)
 end
-function UpdateUserScores(score)
+function UpdateUserScores(score, place)
     local currentInfo = loadsave.loadTable("userInfo.json")
     local userInfo 
 
-    if (currentInfo == nil) then --create fresh file
-        userInfo = {
-                        highestScore = score,
-                        totalScore   = score
-                    }
-    else --update file
-        local highScore = currentInfo["highestScore"]
-        local totalScore = currentInfo["totalPoints"]
-        if (score > highScore) then
-            highScore = score
-        end
+    local highScore = currentInfo["highestScore"]
+    local totalScore = currentInfo["totalScore"]
 
-        userInfo = {
-                        highestScore  = highScore,
-                        totalPoints   = totalScore + score
-                    }
+    local firstPlace   = currentInfo["firstPlace"]
+    local secondPlace  = currentInfo["secondPlace"]
+    local thirdPlace   = currentInfo["thirdPlace"]
+    local fourthPlace  = currentInfo["fourthPlace"]
+    local totalGames   = currentInfo["totalGames"] 
+
+    if place == 1 then 
+        firstPlace  = tostring(tonumber(firstPlace) + 1)
+    elseif place == 2 then
+        secondPlace = tostring(tonumber(secondPlace) + 1)
+    elseif place == 3 then
+        thirdPlace  = tostring(tonumber(thirdPlace) + 1)
+    else
+        fourthPlace = tostring(tonumber(fourthPlace) + 1)
     end
+
+    if (score > highScore) then
+        highScore = score
+    end
+
+    userInfo = {
+                    highestScore  = highScore,
+                    totalScore    = totalScore + score,
+                    firstPlace = firstPlace,
+                    secondPlace = secondPlace,
+                    thirdPlace = thirdPlace,
+                    fourthPlace = fourthPlace,
+                    totalGames = totalGames + 1
+                }
+
     loadsave.saveTable(userInfo, "userInfo.json")
 end
 ---------------------------------------HELPERS--------------------------------------------------
@@ -1244,7 +1259,6 @@ function scene:show( event )
 
     dealCards(6)
     GamePlay()
-    MoveToGameOver()
     
     --AutomateGame()
     end
